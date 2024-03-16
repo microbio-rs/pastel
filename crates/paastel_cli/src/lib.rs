@@ -14,13 +14,75 @@
 
 pub mod cmd;
 pub mod error;
+pub mod settings;
 
-use clap::Command;
+use clap::{
+    builder::{styling::AnsiColor, Styles},
+    Arg, Command,
+};
+
+const HELP_TEMPLATE: &str = "
+{about}
+
+Usage:
+  {usage}
+
+Available Commands:
+{subcommands}
+
+Flags:
+{options}
+";
+
+const ABOUT_TEMPLATE: &str = " 
+           ██████╗  █████╗  █████╗ ███████╗████████╗███████╗██╗     
+           ██╔══██╗██╔══██╗██╔══██╗██╔════╝╚══██╔══╝██╔════╝██║     
+           ██████╔╝███████║███████║███████╗   ██║   █████╗  ██║     
+           ██╔═══╝ ██╔══██║██╔══██║╚════██║   ██║   ██╔══╝  ██║     
+           ██║     ██║  ██║██║  ██║███████║   ██║   ███████╗███████╗
+           ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝   ╚═╝   ╚══════╝╚══════╝
+        paastel cli is the official command line interface for PaaStel";
 
 pub fn execute() -> Result<(), error::Error> {
-    let _ = Command::new("paastel")
+    init_tracing();
+
+    let matches = Command::new("paastel")
+        .about(ABOUT_TEMPLATE)
         .term_width(80)
+        .help_template(HELP_TEMPLATE)
+        .styles(get_styles())
+        .subcommand(settings::command())
         .subcommand(cmd::auth::command())
+        .arg(Arg::new("settings-file"))
         .get_matches();
+
+    match matches.subcommand() {
+        Some(("login", sub_m)) => {
+            cmd::auth::login(sub_m)?;
+        }
+        Some(("settings", sub_m)) => {
+            settings::matches(sub_m)?;
+        }
+        _ => {}
+    }
+
     Ok(())
+}
+
+fn init_tracing() {
+    use tracing_subscriber::EnvFilter;
+
+    tracing_subscriber::fmt()
+        .with_env_filter(EnvFilter::from_default_env())
+        .with_target(true)
+        .init();
+}
+
+pub fn get_styles() -> Styles {
+    let styles = Styles::styled()
+        .header(AnsiColor::Yellow.on_default())
+        .usage(AnsiColor::Green.on_default())
+        .literal(AnsiColor::Green.on_default())
+        .placeholder(AnsiColor::Green.on_default());
+    styles
 }

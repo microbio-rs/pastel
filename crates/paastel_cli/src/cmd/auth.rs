@@ -12,20 +12,22 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-use clap::{Arg, Command};
+use clap::{Arg, ArgMatches, Command};
+
+use crate::error::Error;
 
 pub fn command() -> Command {
     Command::new("login")
-        .about("Paastel login to the server")
-        .after_help(
+        .about("PaaStel login to the server")
+        .long_about(
             "The login command allows you to authenticate against \
             an Paastel instance and updates the settings file with the \
             generated authentication token",
         )
         .arg(Arg::new("url"))
         .arg(
-            Arg::new("user")
-                .env("PAASTEL_USER")
+            Arg::new("username")
+                .env("PAASTEL_USERNAME")
                 .short('u')
                 .help("username that will be used to login"),
         )
@@ -47,4 +49,13 @@ pub fn command() -> Command {
                 .help("perform OIDC authentication (user and password will be ignored)")
                 .action(clap::ArgAction::SetTrue),
         )
+}
+
+pub fn login(matches: &ArgMatches) -> Result<(), Error> {
+    let username = match matches.get_one::<String>("username") {
+        Some(u) => u.as_str(),
+        None => "ask username",
+    };
+    println!("{username}");
+    Ok(())
 }

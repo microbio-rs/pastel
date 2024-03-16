@@ -17,6 +17,10 @@ use std::fmt::Display;
 #[derive(Debug)]
 pub enum Error {
     UrlParse(String),
+    Settings(String),
+    Io(String),
+    Toml(String),
+    Base64(String),
     Unknown,
 }
 
@@ -24,6 +28,10 @@ impl Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Error::UrlParse(e) => write!(f, "parser url {e}"),
+            Error::Settings(e) => write!(f, "settings {e}"),
+            Error::Io(e) => write!(f, "io {e}"),
+            Error::Toml(e) => write!(f, "toml parser {e}"),
+            Error::Base64(e) => write!(f, "base64 {e}"),
             Error::Unknown => write!(f, "unknown"),
         }
     }
@@ -34,5 +42,29 @@ impl std::error::Error for Error {}
 impl From<url::ParseError> for Error {
     fn from(value: url::ParseError) -> Self {
         Self::UrlParse(value.to_string())
+    }
+}
+
+impl From<std::io::Error> for Error {
+    fn from(value: std::io::Error) -> Self {
+        Self::Io(value.to_string())
+    }
+}
+
+impl From<toml::de::Error> for Error {
+    fn from(value: toml::de::Error) -> Self {
+        Self::Toml(value.to_string())
+    }
+}
+
+impl From<toml::ser::Error> for Error {
+    fn from(value: toml::ser::Error) -> Self {
+        Self::Toml(value.to_string())
+    }
+}
+
+impl From<base64::DecodeError> for Error {
+    fn from(value: base64::DecodeError) -> Self {
+        Self::Base64(value.to_string())
     }
 }

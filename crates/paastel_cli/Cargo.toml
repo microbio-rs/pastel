@@ -12,7 +12,13 @@ repository.workspace = true
 rust-version.workspace = true
 
 [dependencies]
+base64 = "0.22.0"
 clap = { version = "4.5.3", features = ["derive", "env", "wrap_help"] }
+dirs = "5.0.1"
+serde = { version = "1.0.197", features = ["derive"] }
+toml = { version = "0.8.11", features = ["preserve_order"] }
+tracing = "0.1.40"
+tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 url = "2.5.0"
 
 [lints]
