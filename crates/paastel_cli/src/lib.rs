@@ -12,11 +12,15 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+pub mod cmd;
 pub mod error;
 
 use clap::Command;
 
 pub fn execute() -> Result<(), error::Error> {
-    let _ = Command::new("paastel").get_matches();
+    let _ = Command::new("paastel")
+        .term_width(80)
+        .subcommand(cmd::auth::command())
+        .get_matches();
     Ok(())
 }

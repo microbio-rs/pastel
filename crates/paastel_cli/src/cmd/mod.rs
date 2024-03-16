@@ -12,27 +12,5 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-use std::fmt::Display;
-
-#[derive(Debug)]
-pub enum Error {
-    UrlParse(String),
-    Unknown,
-}
-
-impl Display for Error {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Error::UrlParse(e) => write!(f, "parser url {e}"),
-            Error::Unknown => write!(f, "unknown"),
-        }
-    }
-}
-
-impl std::error::Error for Error {}
-
-impl From<url::ParseError> for Error {
-    fn from(value: url::ParseError) -> Self {
-        Self::UrlParse(value.to_string())
-    }
-}
+pub mod auth;
+pub use auth::*;
