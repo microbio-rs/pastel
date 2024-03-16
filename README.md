@@ -2,5 +2,5 @@
 
 # License
 
-This project is licensed under MIT license ([LICENSE](LICENSE)
-https://opensource.org/licenses/MIT).
+This project is licensed under ISC license ([LICENSE](LICENSE) or 
+https://opensource.org/licenses/ISC).
