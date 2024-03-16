@@ -14,7 +14,6 @@
 
 pub mod cmd;
 pub mod error;
-pub mod settings;
 
 use clap::{
     builder::{styling::AnsiColor, Styles},
@@ -51,18 +50,14 @@ pub fn execute() -> Result<(), error::Error> {
         .term_width(80)
         .help_template(HELP_TEMPLATE)
         .styles(get_styles())
-        .subcommand(settings::command())
+        .subcommand(cmd::settings::command())
         .subcommand(cmd::auth::command())
         .arg(Arg::new("settings-file"))
         .get_matches();
 
     match matches.subcommand() {
-        Some(("login", sub_m)) => {
-            cmd::auth::login(sub_m)?;
-        }
-        Some(("settings", sub_m)) => {
-            settings::matches(sub_m)?;
-        }
+        Some(("login", sub_m)) => cmd::auth::login(sub_m)?,
+        Some(("settings", sub_m)) => cmd::settings::matches(sub_m)?,
         _ => {}
     }
 
