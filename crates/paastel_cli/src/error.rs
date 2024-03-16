@@ -11,13 +11,19 @@
 // WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+use std::fmt::Display;
 
-use std::process::ExitCode;
-
-fn main() -> ExitCode {
-    if let Err(e) = paastel_cli::execute() {
-        eprintln!("Error: {e}");
-        return ExitCode::FAILURE;
-    }
-    ExitCode::SUCCESS
+#[derive(Debug)]
+pub enum Error {
+    Unknown,
 }
+
+impl Display for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Error::Unknown => write!(f, "unknown"),
+        }
+    }
+}
+
+impl std::error::Error for Error {}
