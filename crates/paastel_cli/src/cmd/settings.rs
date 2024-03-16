@@ -1,6 +1,7 @@
 use std::{
     fmt::Display,
     io::Write,
+    os::unix::fs::OpenOptionsExt,
     path::{Path, PathBuf},
 };
 
@@ -102,7 +103,11 @@ impl Settings {
         let settings_str = toml::to_string(self)?;
 
         // saving settings
-        let mut file = std::fs::File::create(path.as_path())?;
+        let mut file = std::fs::OpenOptions::new()
+            .create(true)
+            .write(true)
+            .mode(0o600)
+            .open(path.as_path())?;
         file.write_all(settings_str.as_bytes())?;
 
         info!("Saved value {self}");
@@ -143,15 +148,14 @@ pub fn command() -> Command {
     Command::new("settings")
         .about("PaaStel settings management")
         .long_about("Manage the PaaStel cli settings")
-        .subcommand(Command::new("show"))
+        .subcommand(Command::new("show").about("Show the current settings"))
+        .subcommand(Command::new("generate").about("Generate default settings"))
 }
 
 pub fn matches(m: &ArgMatches) -> Result<(), Error> {
     match m.subcommand() {
-        Some(("show", _sub_m)) => {
-            let setting = load()?;
-            setting.show();
-        }
+        Some(("show", _)) => load()?.show(),
+        Some(("generate", _)) => load()?.save()?,
         _ => {}
     }
     Ok(())
