@@ -109,6 +109,24 @@ impl Settings {
 
         Ok(())
     }
+
+    pub fn show(&self) {
+        use prettytable::{format, row, Cell, Row, Table};
+
+        let mut table = Table::new();
+        table.set_format(*format::consts::FORMAT_NO_LINESEP_WITH_TITLE);
+        table.add_row(Row::new(vec![
+            Cell::new("Key").style_spec("bFg"),
+            Cell::new("Value").style_spec("bFg"),
+        ]));
+        table.add_row(row!["Current Namespace", self.namespace]);
+        table.add_row(row!["API Username", self.username]);
+        table.add_row(row!["API Password", self.password]);
+        table.add_row(row!["API Token", ""]);
+        table.add_row(row!["API Url", self.api]);
+        table.add_row(row!["Wss Url", self.wss]);
+        table.printstd();
+    }
 }
 
 pub fn default_location() -> PathBuf {
@@ -131,9 +149,8 @@ pub fn command() -> Command {
 pub fn matches(m: &ArgMatches) -> Result<(), Error> {
     match m.subcommand() {
         Some(("show", _sub_m)) => {
-            println!("aqui");
-            let l = load()?;
-            dbg!(l);
+            let setting = load()?;
+            setting.show();
         }
         _ => {}
     }

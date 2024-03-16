@@ -15,6 +15,7 @@ rust-version.workspace = true
 base64 = "0.22.0"
 clap = { version = "4.5.3", features = ["derive", "env", "wrap_help"] }
 dirs = "5.0.1"
+prettytable-rs = { version = "0.10.0", default-features = false }
 serde = { version = "1.0.197", features = ["derive"] }
 toml = { version = "0.8.11", features = ["preserve_order"] }
 tracing = "0.1.40"
