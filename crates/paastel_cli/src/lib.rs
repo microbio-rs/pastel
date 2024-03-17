@@ -28,12 +28,13 @@ const HELP_TEMPLATE: &str = "
 Usage:
   {usage}
 
-Available Commands:
+Options:
+{options}
+
+Commands:
 {subcommands}
 
-Flags:
-{options}
-";
+{before-help}\n";
 
 const ABOUT_TEMPLATE: &str = " 
            ██████╗  █████╗  █████╗ ███████╗████████╗███████╗██╗     
@@ -47,8 +48,9 @@ const ABOUT_TEMPLATE: &str = "
 pub fn execute() -> Result<(), error::Error> {
     init_tracing();
 
-    let matches = Command::new("paastel")
+    let mut command = Command::new("paastel")
         .about(ABOUT_TEMPLATE)
+        .before_long_help("See 'paastel help <command>' for more information on a specific command.")
         .disable_version_flag(true)
         .term_width(80)
         .help_template(HELP_TEMPLATE)
@@ -69,12 +71,12 @@ pub fn execute() -> Result<(), error::Error> {
             Arg::new("version")
                 .short('v')
                 .long("version")
-                .num_args(0)
-                .help("version of paastel"),
-        )
-        .get_matches();
+                .action(clap::ArgAction::SetTrue)
+                .help("version of paastel")
+        );
+    let matches = command.clone().get_matches();
 
-    if matches.contains_id("version") {
+    if *matches.get_one::<bool>("version").unwrap() {
         println!("{}", cmd::version::get_version_string());
         return Ok(());
     }
@@ -82,7 +84,7 @@ pub fn execute() -> Result<(), error::Error> {
     match matches.subcommand() {
         Some(("login", sub_m)) => cmd::auth::login(sub_m)?,
         Some(("settings", sub_m)) => cmd::settings::matches(sub_m)?,
-        _ => {}
+        _ => command.print_help()?,
     }
 
     Ok(())
