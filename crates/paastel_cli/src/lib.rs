@@ -15,6 +15,8 @@
 pub mod cmd;
 pub mod error;
 
+use std::path::PathBuf;
+
 use clap::{
     builder::{styling::AnsiColor, Styles},
     Arg, Command,
@@ -47,13 +49,35 @@ pub fn execute() -> Result<(), error::Error> {
 
     let matches = Command::new("paastel")
         .about(ABOUT_TEMPLATE)
+        .disable_version_flag(true)
         .term_width(80)
         .help_template(HELP_TEMPLATE)
         .styles(get_styles())
         .subcommand(cmd::settings::command())
         .subcommand(cmd::auth::command())
-        .arg(Arg::new("settings-file"))
+        .arg(
+            Arg::new("settings-file")
+                .long("settings-file")
+                .value_parser(clap::value_parser!(PathBuf))
+                .default_value(
+                    cmd::settings::default_location().into_os_string(),
+                )
+                .env("PAASTEL_SETTINGS")
+                .help("Set path of settings file"),
+        )
+        .arg(
+            Arg::new("version")
+                .short('v')
+                .long("version")
+                .num_args(0)
+                .help("version of paastel"),
+        )
         .get_matches();
+
+    if matches.contains_id("version") {
+        println!("{}", cmd::version::get_version_string());
+        return Ok(());
+    }
 
     match matches.subcommand() {
         Some(("login", sub_m)) => cmd::auth::login(sub_m)?,
