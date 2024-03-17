@@ -58,7 +58,11 @@ pub async fn execute() -> Result<(), error::Error> {
         .styles(get_styles())
         .subcommand(cmd::settings::command())
         .subcommand(cmd::auth::command())
-        .subcommand(Command::new("server"))
+        .subcommand(
+            Command::new("server")
+            .about("Starts the PaaStel rest server.")
+            .long_about("")
+        )
          .arg(
             Arg::new("verbose")
             .long("verbose")
