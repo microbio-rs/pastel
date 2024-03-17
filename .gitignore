@@ -3,3 +3,9 @@ target
 .vscode/
 *.iml
 *.swp
+
+# rustfmt backups
+*.rs.bk
+
+# mdbook generated output
+/book/book

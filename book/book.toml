@@ -1,0 +1,14 @@
+[book]
+authors = ["murilo ijanc"]
+language = "en"
+multilingual = false
+src = "src"
+title = "PaaStel Documentation"
+
+[output.html]
+edit-url-template = "https://github.com/microbio-rs/paastel/edit/master/book/{path}"
+git-repository-url = "https://github.com/microbio-rs/paastel/tree/master/book"
+
+[output.html.playground]
+editable = true
+line-numbers = true
