@@ -21,6 +21,7 @@ pub enum Error {
     Io(String),
     Toml(String),
     Base64(String),
+    Server,
     Unknown,
 }
 
@@ -32,6 +33,7 @@ impl Display for Error {
             Error::Io(e) => write!(f, "io {e}"),
             Error::Toml(e) => write!(f, "toml parser {e}"),
             Error::Base64(e) => write!(f, "base64 {e}"),
+            Error::Server => write!(f, "server error"),
             Error::Unknown => write!(f, "unknown"),
         }
     }
@@ -66,5 +68,11 @@ impl From<toml::ser::Error> for Error {
 impl From<base64::DecodeError> for Error {
     fn from(value: base64::DecodeError) -> Self {
         Self::Base64(value.to_string())
+    }
+}
+
+impl From<paastel_rest::error::Error> for Error {
+    fn from(_: paastel_rest::error::Error) -> Self {
+        Self::Server
     }
 }

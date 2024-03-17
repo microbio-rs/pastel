@@ -14,8 +14,9 @@
 
 use std::process::ExitCode;
 
-fn main() -> ExitCode {
-    if let Err(e) = paastel_cli::execute() {
+#[tokio::main]
+async fn main() -> ExitCode {
+    if let Err(e) = paastel_cli::execute().await {
         eprintln!("Error: {e}");
         return ExitCode::FAILURE;
     }

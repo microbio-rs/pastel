@@ -45,7 +45,7 @@ const ABOUT_TEMPLATE: &str = "
            ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝   ╚═╝   ╚══════╝╚══════╝
         paastel cli is the official command line interface for PaaStel";
 
-pub fn execute() -> Result<(), error::Error> {
+pub async fn execute() -> Result<(), error::Error> {
     init_tracing();
 
     let mut command = Command::new("paastel")
@@ -58,6 +58,7 @@ pub fn execute() -> Result<(), error::Error> {
         .styles(get_styles())
         .subcommand(cmd::settings::command())
         .subcommand(cmd::auth::command())
+        .subcommand(Command::new("server"))
          .arg(
             Arg::new("verbose")
             .long("verbose")
@@ -100,6 +101,7 @@ pub fn execute() -> Result<(), error::Error> {
     match matches.subcommand() {
         Some(("login", sub_m)) => cmd::auth::login(sub_m)?,
         Some(("settings", sub_m)) => cmd::settings::matches(sub_m)?,
+        Some(("server", _sub_m)) => paastel_rest::serve().await?,
         _ => command.print_help()?,
     }
 

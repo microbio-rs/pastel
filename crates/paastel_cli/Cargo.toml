@@ -16,8 +16,10 @@ anstyle = "1.0.6"
 base64 = "0.22.0"
 clap = { version = "4.5.3", features = ["string", "derive", "env", "wrap_help"] }
 dirs = "5.0.1"
+paastel_rest = { version = "0.1.0", path = "../paastel_rest" }
 prettytable-rs = { version = "0.10.0", default-features = false }
 serde = { version = "1.0.197", features = ["derive"] }
+tokio = { version = "1.36.0", features = ["macros", "rt-multi-thread"] }
 toml = { version = "0.8.11", features = ["preserve_order"] }
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
