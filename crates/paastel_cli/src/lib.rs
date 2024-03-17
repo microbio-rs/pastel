@@ -14,13 +14,13 @@
 
 pub mod cmd;
 pub mod error;
+pub mod util;
+
+use util::style;
 
 use std::path::PathBuf;
 
-use clap::{
-    builder::{styling::AnsiColor, Styles},
-    Arg, Command,
-};
+use clap::{builder::Styles, Arg, ArgAction, Command};
 
 const HELP_TEMPLATE: &str = "
 {about}
@@ -34,7 +34,7 @@ Options:
 Commands:
 {subcommands}
 
-{before-help}\n";
+{before-help}";
 
 const ABOUT_TEMPLATE: &str = " 
            ██████╗  █████╗  █████╗ ███████╗████████╗███████╗██╗     
@@ -49,6 +49,7 @@ pub fn execute() -> Result<(), error::Error> {
     init_tracing();
 
     let mut command = Command::new("paastel")
+        .next_display_order(800)
         .about(ABOUT_TEMPLATE)
         .before_long_help("See 'paastel help <command>' for more information on a specific command.")
         .disable_version_flag(true)
@@ -57,6 +58,21 @@ pub fn execute() -> Result<(), error::Error> {
         .styles(get_styles())
         .subcommand(cmd::settings::command())
         .subcommand(cmd::auth::command())
+         .arg(
+            Arg::new("verbose")
+            .long("verbose")
+            .help("Use verbose output (-vv very verbose)")
+            .short('v')
+            .action(ArgAction::Count)
+            .global(true),
+        )
+        .arg(Arg::new("quiet").help("Do not print cargo log messages").short('q').global(true))
+        .arg(
+            Arg::new("color")
+                .help("Coloring: auto, always, never")
+                .value_name("WHEN")
+                .global(true),
+        )
         .arg(
             Arg::new("settings-file")
                 .long("settings-file")
@@ -69,7 +85,7 @@ pub fn execute() -> Result<(), error::Error> {
         )
         .arg(
             Arg::new("version")
-                .short('v')
+                .short('V')
                 .long("version")
                 .action(clap::ArgAction::SetTrue)
                 .help("version of paastel")
@@ -100,10 +116,12 @@ fn init_tracing() {
 }
 
 pub fn get_styles() -> Styles {
-    let styles = Styles::styled()
-        .header(AnsiColor::Yellow.on_default())
-        .usage(AnsiColor::Green.on_default())
-        .literal(AnsiColor::Green.on_default())
-        .placeholder(AnsiColor::Green.on_default());
-    styles
+    clap::builder::styling::Styles::styled()
+        .header(style::HEADER)
+        .usage(style::USAGE)
+        .literal(style::LITERAL)
+        .placeholder(style::PLACEHOLDER)
+        .error(style::ERROR)
+        .valid(style::VALID)
+        .invalid(style::INVALID)
 }
