@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["crates/paastel_cli"]
+members = ["crates/paastel_cli", "crates/paastel_rest"]
 
 [workspace.package]
 authors = ["Murilo Ijanc' <mbsd@m0x.ru>"]
