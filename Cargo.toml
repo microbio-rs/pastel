@@ -18,6 +18,8 @@ all           = "warn"
 dbg_macro     = "warn"
 todo          = "warn"
 unimplemented = "warn"
+print_stderr  = "warn"
+print_stdout  = "warn"
 
 [workspace.dependencies]
 serde       = { version = "1.0.197", features = ["derive"] }
