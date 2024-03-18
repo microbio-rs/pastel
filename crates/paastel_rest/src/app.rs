@@ -14,14 +14,16 @@
 
 use std::time::Duration;
 
+use axum::http::HeaderName;
 use axum::middleware;
 use axum::response::IntoResponse;
 use axum::{response::Html, routing::get, Router};
 use tokio::net::TcpListener;
+use tower_http::propagate_header::PropagateHeaderLayer;
+use tower_http::request_id::{MakeRequestUuid, SetRequestIdLayer};
 use tower_http::timeout::TimeoutLayer;
 use tower_http::trace::TraceLayer;
 
-use crate::middleware::{propagate_request_id_layer, request_id_layer};
 use crate::prometheus;
 use crate::utils;
 
@@ -29,13 +31,16 @@ pub(crate) async fn start_main_server() {
     let app = Router::new()
         .route("/", get(handler))
         .route("/healthz", get(healthz))
+        .route_layer(middleware::from_fn(prometheus::track_metrics))
+        .layer(SetRequestIdLayer::x_request_id(MakeRequestUuid))
+        .layer(PropagateHeaderLayer::new(HeaderName::from_static(
+            "x-request-id",
+        )))
         .layer((
-            propagate_request_id_layer(),
-            request_id_layer(),
             TraceLayer::new_for_http(),
             TimeoutLayer::new(Duration::from_secs(10)),
         ))
-        .route_layer(middleware::from_fn(prometheus::track_metrics));
+        .layer(SetRequestIdLayer::x_request_id(MakeRequestUuid));
 
     let listener = TcpListener::bind("0.0.0.0:3000").await.unwrap();
 

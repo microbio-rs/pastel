@@ -16,7 +16,7 @@ axum                        = "0.7.4"
 serde.workspace             = true
 tokio                       = { version = "1.36.0", features = ["signal"] }
 tower                       = { version = "0.4.13", features = ["util"] }
-tower-http                  = { version = "0.5.2", features = ["timeout", "trace", "request-id"] }
+tower-http                  = { version = "0.5.2", features = ["timeout", "trace", "request-id", "propagate-header", "compression-full"] }
 tracing.workspace           = true
 metrics                     = { version = "0.22.3", default-features = false }
 metrics-exporter-prometheus = { version = "0.14.0", default-features = false }
