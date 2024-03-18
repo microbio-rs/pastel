@@ -14,6 +14,7 @@
 
 pub(crate) mod app;
 pub mod error;
+pub(crate) mod middleware;
 pub(crate) mod prometheus;
 pub(crate) mod utils;
 
