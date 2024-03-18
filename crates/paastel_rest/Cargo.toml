@@ -13,11 +13,14 @@ rust-version.workspace = true
 
 [dependencies]
 axum = "0.7.4"
-serde = { version = "1.0.197", features = ["derive"] }
+serde.workspace = true
 tokio = { version = "1.36.0", features = ["signal"] }
 tower = { version = "0.4.13", features = ["util"] }
 tower-http = { version = "0.5.2", features = ["timeout", "trace"] }
-tracing = "0.1.40"
+tracing.workspace = true
 
 [lints]
 workspace = true
+
+[lib]
+doctest = false
