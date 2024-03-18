@@ -1,24 +1,28 @@
 [workspace]
 resolver = "2"
-members = ["crates/paastel_cli", "crates/paastel_rest"]
+members  = ["crates/paastel_cli", "crates/paastel_rest"]
 
 [workspace.package]
-authors = ["Murilo Ijanc' <mbsd@m0x.ru>"]
-categories = ["development-tools", "web-programming"]
-description = "Go from application sources to URL in a single step"
-edition = "2021"
-homepage = "https://microbio.rs"
-keywords = ["paas", "platform", "development-tools"]
-license = "ISC"
-repository = "https://github.com/microbio-rs/paastel"
+authors      = ["Murilo Ijanc' <mbsd@m0x.ru>"]
+categories   = ["development-tools", "web-programming"]
+description  = "Go from application sources to URL in a single step"
+edition      = "2021"
+homepage     = "https://microbio.rs"
+keywords     = ["paas", "platform", "development-tools"]
+license      = "ISC"
+repository   = "https://github.com/microbio-rs/paastel"
 rust-version = "1.76"
 
 [workspace.lints.clippy]
-all = "warn"
-dbg_macro = "warn"
-todo = "warn"
+all           = "warn"
+dbg_macro     = "warn"
+todo          = "warn"
 unimplemented = "warn"
 
 [workspace.dependencies]
-serde = { version = "1.0.197", features = ["derive"] }
-tracing = "0.1.40"
+serde       = { version = "1.0.197", features = ["derive"] }
+tracing     = "0.1.40"
+mockall     = "0.12.1"
+async-trait = "0.1.78"
+anyhow      = "1.0.81"
+thiserror   = "1.0.58"
