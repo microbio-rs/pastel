@@ -13,62 +13,45 @@
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 pub mod error;
+pub(crate) mod prometheus;
+pub(crate) mod utils;
 
 use std::time::Duration;
 
+use axum::middleware;
 use axum::response::IntoResponse;
 use axum::{response::Html, routing::get, Router};
 use tokio::net::TcpListener;
-use tokio::signal;
 use tower_http::timeout::TimeoutLayer;
 use tower_http::trace::TraceLayer;
 
-pub async fn serve() -> Result<(), error::Error> {
-    // Create a regular axum app.
+async fn start_main_server() {
     let app = Router::new()
         .route("/", get(handler))
         .route("/healthz", get(healthz))
+        .route_layer(middleware::from_fn(prometheus::track_metrics))
         .layer((
             TraceLayer::new_for_http(),
-            // Graceful shutdown will wait for outstanding requests to complete. Add a timeout so
-            // requests don't hang forever.
             TimeoutLayer::new(Duration::from_secs(10)),
         ));
 
-    // Create a `TcpListener` using tokio.
     let listener = TcpListener::bind("0.0.0.0:3000").await.unwrap();
 
-    // Run the server with graceful shutdown
+    tracing::info!(
+        "listening rest server on {}",
+        listener.local_addr().unwrap()
+    );
+
     axum::serve(listener, app)
-        .with_graceful_shutdown(shutdown_signal())
+        .with_graceful_shutdown(utils::shutdown_signal())
         .await
         .unwrap();
-
-    Ok(())
 }
 
-async fn shutdown_signal() {
-    let ctrl_c = async {
-        signal::ctrl_c()
-            .await
-            .expect("failed to install Ctrl+C handler");
-    };
-
-    #[cfg(unix)]
-    let terminate = async {
-        signal::unix::signal(signal::unix::SignalKind::terminate())
-            .expect("failed to install signal handler")
-            .recv()
-            .await;
-    };
-
-    #[cfg(not(unix))]
-    let terminate = std::future::pending::<()>();
-
-    tokio::select! {
-        _ = ctrl_c => {},
-        _ = terminate => {},
-    }
+pub async fn serve() -> Result<(), error::Error> {
+    let (_main_server, _metrics_server) =
+        tokio::join!(start_main_server(), prometheus::start_metrics_server());
+    Ok(())
 }
 
 async fn handler() -> impl IntoResponse {
