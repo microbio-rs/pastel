@@ -27,35 +27,90 @@ pub fn command() -> Command {
         .arg(Arg::new("url"))
         .arg(
             Arg::new("username")
+                .long("username")
                 .env("PAASTEL_USERNAME")
                 .short('u')
                 .help("username that will be used to login"),
         )
         .arg(
             Arg::new("password")
+                .long("password")
                 .env("PAASTEL_PASSWORD")
                 .short('p')
                 .help("password that will be used to login"),
         )
-        .arg(
-            Arg::new("trust-ca")
-                .long("trust-ca")
-                .help("automatically trust the unknown CA")
-                .action(clap::ArgAction::SetTrue),
-        )
-        .arg(
-            Arg::new("oidc")
-                .long("oidc")
-                .help("perform OIDC authentication (user and password will be ignored)")
-                .action(clap::ArgAction::SetTrue),
-        )
+    // .arg(
+    //     Arg::new("trust-ca")
+    //         .long("trust-ca")
+    //         .help("automatically trust the unknown CA")
+    //         .action(clap::ArgAction::SetTrue),
+    // )
+    // .arg(
+    //     Arg::new("oidc")
+    //         .long("oidc")
+    //         .help("perform OIDC authentication (user and password will be ignored)")
+    //         .action(clap::ArgAction::SetTrue),
+    // )
 }
 
 pub fn login(matches: &ArgMatches) -> Result<(), Error> {
-    let username = match matches.get_one::<String>("username") {
-        Some(u) => u.as_str(),
+    let _username = match matches.get_one::<String>("username") {
+        Some(u) => {
+            let u = u.as_str();
+            if u.trim().is_empty() {
+                panic!("invalid username");
+            } else {
+                u
+            }
+        }
         None => "ask username",
     };
-    println!("{username}");
+
+    let _password = match matches.get_one::<String>("password") {
+        Some(u) => {
+            let u = u.as_str();
+            if u.trim().is_empty() {
+                panic!("invalid username");
+            } else {
+                u
+            }
+        }
+        None => "ask username",
+    };
+
+    // NOTE: validate url and required value
+    let _url = match matches.get_one::<String>("url") {
+        Some(u) => {
+            let u = u.as_str();
+            if u.trim().is_empty() {
+                panic!("invalid username");
+            } else {
+                u
+            }
+        }
+        None => "ask username",
+    };
+
+    // TODO: update settings with username, password, url
+    // TODO: verify credentials
+    // 1. settings have username, password, url api
+    // 2. client call api to /me route
+    // 3. /me route has middleware.Authentication
+    // 3.1 check authorization header
+    // 3.2 create auth service
+    // 3.2.1 this auth service has kubernetes port to secret and port to configmap
+    // 3.3 check if basic authentication (performs the basic authentication)
+    // 3.3.1 get username and password basic_auth
+    // 3.3.2 auth service above get user by username
+    // 3.3.2.1 getuserbyname get all users
+    // 3.3.2.2 getallusers get use secrets
+    // 3.3.2.3 get use secrets call kubernetes and filter
+    // 3.3.2.4 convert secrets into users
+    // TODO: save settings (create file)
+
+    println!("username: {_username}");
+    println!("password: {_password}");
+    println!("url: {_url}");
+
     Ok(())
 }
