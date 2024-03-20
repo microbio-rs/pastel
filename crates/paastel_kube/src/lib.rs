@@ -16,13 +16,14 @@ use async_trait::async_trait;
 use k8s_openapi::api::core::v1::Secret;
 use kube::{api::ListParams, Api, Client};
 
-// const SECRET_GROUP_NAME: &str = "paastel.io";
+const SECRET_LABEL_KEY: &str = "paastel.io/api-user-credentials";
+const SECRET_LABEL_VALUE: &str = "true";
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {}
 pub type Result<T> = std::result::Result<T, Error>;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct UserSecret {
     pub username: String,
     pub password: String,
@@ -55,8 +56,22 @@ impl Secrets for KubeSecrets {
         let lp = ListParams::default()
             .match_any()
             .timeout(60)
-            .labels("kubernetes.io/lifecycle=spot");
-        let _s = self.secrets.list(&lp).await;
-        todo!()
+            .labels(&format!("{}={}", SECRET_LABEL_KEY, SECRET_LABEL_VALUE));
+        let secrets = self.secrets.list(&lp).await.unwrap();
+        dbg!(secrets);
+        Ok(vec![UserSecret::default()])
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn list_secrets() {
+        let client = Client::try_default().await.unwrap();
+        let kube_secrets = KubeSecrets::new(client);
+        let _ = kube_secrets.list_user_secrets().await.unwrap();
+        assert!(true)
     }
 }

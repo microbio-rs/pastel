@@ -21,3 +21,6 @@ thiserror.workspace = true
 
 [lints]
 workspace = true
+
+[dev-dependencies]
+tokio = { version = "1.36.0", features = ["macros"] }

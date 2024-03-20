@@ -1425,6 +1425,7 @@ dependencies = [
  "k8s-openapi",
  "kube",
  "thiserror",
+ "tokio",
 ]
 
 [[package]]
