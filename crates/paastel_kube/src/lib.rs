@@ -13,20 +13,50 @@
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 use async_trait::async_trait;
+use k8s_openapi::api::core::v1::Secret;
+use kube::{api::ListParams, Api, Client};
 
 // const SECRET_GROUP_NAME: &str = "paastel.io";
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {}
-
 pub type Result<T> = std::result::Result<T, Error>;
 
 #[derive(Debug)]
-pub struct UserSecret {}
+pub struct UserSecret {
+    pub username: String,
+    pub password: String,
+    pub secret_name: String,
+}
 
 pub type UserSecrets = Vec<UserSecret>;
 
 #[async_trait]
 pub trait Secrets {
     async fn list_user_secrets(&self) -> Result<UserSecrets>;
+}
+
+#[derive(Debug)]
+pub struct KubeSecrets {
+    secrets: Api<Secret>,
+}
+
+impl KubeSecrets {
+    pub fn new(client: Client) -> Self {
+        Self {
+            secrets: Api::default_namespaced(client),
+        }
+    }
+}
+
+#[async_trait]
+impl Secrets for KubeSecrets {
+    async fn list_user_secrets(&self) -> Result<UserSecrets> {
+        let lp = ListParams::default()
+            .match_any()
+            .timeout(60)
+            .labels("kubernetes.io/lifecycle=spot");
+        let _s = self.secrets.list(&lp).await;
+        todo!()
+    }
 }
