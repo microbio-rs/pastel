@@ -57,21 +57,30 @@ impl Secrets for KubeSecrets {
             .match_any()
             .timeout(60)
             .labels(&format!("{}={}", SECRET_LABEL_KEY, SECRET_LABEL_VALUE));
-        let secrets = self.secrets.list(&lp).await.unwrap();
-        dbg!(secrets);
-        Ok(vec![UserSecret::default()])
+        let secrets: UserSecrets = self
+            .secrets
+            .list(&lp)
+            .await
+            .unwrap()
+            .iter()
+            .map(UserSecret::from)
+            .collect();
+
+        Ok(secrets)
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[tokio::test]
-    async fn list_secrets() {
-        let client = Client::try_default().await.unwrap();
-        let kube_secrets = KubeSecrets::new(client);
-        let _ = kube_secrets.list_user_secrets().await.unwrap();
-        assert!(true)
+impl From<&Secret> for UserSecret {
+    fn from(value: &Secret) -> Self {
+        let mut user_secret = UserSecret::default();
+        let data = value.data.as_ref();
+        user_secret.username =
+            String::from_utf8(data.unwrap().get("username").unwrap().0.clone())
+                .unwrap();
+        user_secret.password =
+            String::from_utf8(data.unwrap().get("password").unwrap().0.clone())
+                .unwrap();
+        user_secret.secret_name = value.metadata.name.clone().unwrap();
+        user_secret
     }
 }
