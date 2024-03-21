@@ -68,7 +68,7 @@ impl Settings {
             let mut settings: Settings = toml::from_str(&text)?;
             // NOTE: improve deserialize automatic decode password
             settings.password = String::from_utf8(
-                BASE64_STANDARD.decode(&settings.password.trim())?,
+                BASE64_STANDARD.decode(settings.password.trim())?,
             )
             .unwrap();
             settings
@@ -136,12 +136,12 @@ impl Settings {
 
 pub fn default_location() -> PathBuf {
     let config_path = dirs::config_dir().unwrap();
-    let config_path = config_path.join(DEFAULT_SETTINGS_PATH);
-    config_path
+    
+    config_path.join(DEFAULT_SETTINGS_PATH)
 }
 
 pub fn load() -> Result<Settings, Error> {
-    Ok(Settings::from_path(default_location().as_path())?)
+    Settings::from_path(default_location().as_path())
 }
 
 pub fn command() -> Command {
