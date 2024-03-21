@@ -118,34 +118,31 @@ mod tests {
 
     #[tokio::test]
     async fn auth_service() {
-        let secret_port = MockAuthKubeSecretPort::new()
-            .expect_list()
-            // .times(1)
-            .returning(|| {
-                let mut secrets = HashMap::new();
-                secrets.insert(
+        let mut secret_port = Box::new(MockAuthKubeSecretPort::new());
+        secret_port.expect_list().times(1).returning(|| {
+            let mut secrets = HashMap::new();
+            secrets.insert(
+                "admin".into(),
+                AuthUser::new(
                     "admin".into(),
-                    AuthUser::new(
-                        "admin".into(),
-                        "password".to_string(),
-                        "secret_name".to_string(),
-                    ),
-                );
-                let auth_users: AuthUsers = AuthUsers::new(secrets);
-                Ok(auth_users)
-            });
-        let hash_password_port = MockAuthHashPasswordPort::new()
+                    "password".to_string(),
+                    "secret_name".to_string(),
+                ),
+            );
+            let auth_users: AuthUsers = AuthUsers::new(secrets);
+            Ok(auth_users)
+        });
+        let mut hash_password_port = Box::new(MockAuthHashPasswordPort::new());
+        hash_password_port
             .expect_verify()
             .with(eq("password"), eq("password"))
-            // .times(1)
+            .times(1)
             .returning(|_, _| Ok(()));
-
-        let secret_port = Box::new(secret_port);
-        let hash_password_port = Box::new(hash_password_port);
 
         let auth_service = AuthService::new(secret_port, hash_password_port);
         let auth_user_command =
             BaseAuthCommand::new("admin".into(), "password".to_string());
         let auth_user = auth_service.basic_auth(&auth_user_command).await;
+        assert!(auth_user.is_ok());
     }
 }
