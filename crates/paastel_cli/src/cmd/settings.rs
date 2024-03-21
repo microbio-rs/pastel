@@ -136,7 +136,7 @@ impl Settings {
 
 pub fn default_location() -> PathBuf {
     let config_path = dirs::config_dir().unwrap();
-    
+
     config_path.join(DEFAULT_SETTINGS_PATH)
 }
 

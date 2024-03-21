@@ -1,5 +1,5 @@
 [package]
-name                   = "paastel_kube"
+name                   = "paastel"
 version                = "0.1.0"
 authors.workspace      = true
 categories.workspace   = true
@@ -15,12 +15,13 @@ rust-version.workspace = true
 
 [dependencies]
 async-trait.workspace = true
-k8s-openapi           = { version = "0.21.1", features = ["latest"] }
-kube                  = { version = "0.88.1", features = ["runtime", "derive"] }
+derive-new.workspace  = true
+mockall.workspace     = true
 thiserror.workspace   = true
+tracing.workspace     = true
 
 [lints]
 workspace = true
 
 [dev-dependencies]
-tokio = { version = "1.36.0", features = ["macros"] }
+tokio = { version = "1.36.0", features = ["macros", "rt-multi-thread"] }
