@@ -23,6 +23,8 @@ use mockall::*;
 pub enum Error {
     #[error("not found user")]
     AuthUserNotFound,
+    #[error("kube port {0}")]
+    KubePort(String),
 }
 pub type Result<T> = std::result::Result<T, Error>;
 
@@ -143,6 +145,7 @@ mod tests {
         let auth_user_command =
             BaseAuthCommand::new("admin".into(), "password".to_string());
         let auth_user = auth_service.basic_auth(&auth_user_command).await;
+
         assert!(auth_user.is_ok());
     }
 }

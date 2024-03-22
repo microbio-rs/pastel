@@ -1486,6 +1486,7 @@ dependencies = [
  "async-trait",
  "k8s-openapi",
  "kube",
+ "paastel",
  "thiserror",
  "tokio",
 ]

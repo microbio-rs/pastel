@@ -12,30 +12,16 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+use std::{result::Result as StdResult, collections::HashMap};
+
 use async_trait::async_trait;
 use k8s_openapi::api::core::v1::Secret;
-use kube::{api::ListParams, Api, Client};
+use kube::{api::ListParams, core::ObjectList, Api, Client, Error as KError};
 
-const SECRET_LABEL_KEY: &str = "paastel.io/api-user-credentials";
-const SECRET_LABEL_VALUE: &str = "true";
+use paastel::{AuthKubeSecretPort, AuthUsers, Error as PaastelError, Result, Username, AuthUser};
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {}
-pub type Result<T> = std::result::Result<T, Error>;
-
-#[derive(Debug, Default)]
-pub struct UserSecret {
-    pub username: String,
-    pub password: String,
-    pub secret_name: String,
-}
-
-pub type UserSecrets = Vec<UserSecret>;
-
-#[async_trait]
-pub trait Secrets {
-    async fn list_user_secrets(&self) -> Result<UserSecrets>;
-}
 
 #[derive(Debug)]
 pub struct KubeSecrets {
@@ -48,39 +34,31 @@ impl KubeSecrets {
             secrets: Api::default_namespaced(client),
         }
     }
-}
 
-#[async_trait]
-impl Secrets for KubeSecrets {
-    async fn list_user_secrets(&self) -> Result<UserSecrets> {
+    async fn get_all(&self) -> StdResult<ObjectList<Secret>, KError> {
         let lp = ListParams::default()
             .match_any()
             .timeout(60)
-            .labels(&format!("{}={}", SECRET_LABEL_KEY, SECRET_LABEL_VALUE));
-        let secrets: UserSecrets = self
-            .secrets
-            .list(&lp)
-            .await
-            .unwrap()
-            .iter()
-            .map(UserSecret::from)
-            .collect();
-
-        Ok(secrets)
+            .labels("kubernetes.io/lifecycle=spot");
+        Ok(self.secrets.list(&lp).await?)
     }
 }
 
-impl From<&Secret> for UserSecret {
-    fn from(value: &Secret) -> Self {
-        let mut user_secret = UserSecret::default();
-        let data = value.data.as_ref();
-        user_secret.username =
-            String::from_utf8(data.unwrap().get("username").unwrap().0.clone())
-                .unwrap();
-        user_secret.password =
-            String::from_utf8(data.unwrap().get("password").unwrap().0.clone())
-                .unwrap();
-        user_secret.secret_name = value.metadata.name.clone().unwrap();
-        user_secret
+#[async_trait]
+impl AuthKubeSecretPort for KubeSecrets {
+    async fn list(&self) -> Result<AuthUsers> {
+        let secrets = self
+            .get_all()
+            .await
+            .map_err(|e| PaastelError::KubePort(e.to_string()))?;
+
+        let content: HashMap<<Username, AuthUser> = secrets.into_iter().map(|c| {
+            let auth_user = //
+            todo!()
+            (c.username, auth_user)
+        }).collect();
+
+        let auth_users = AuthUsers::new(content);
+        Ok(auth_users)
     }
 }
