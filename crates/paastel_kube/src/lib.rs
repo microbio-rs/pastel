@@ -12,26 +12,42 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-use std::{result::Result as StdResult, collections::HashMap};
+use std::{collections::HashMap, result::Result as StdResult};
 
 use async_trait::async_trait;
 use k8s_openapi::api::core::v1::Secret;
 use kube::{api::ListParams, core::ObjectList, Api, Client, Error as KError};
 
-use paastel::{AuthKubeSecretPort, AuthUsers, Error as PaastelError, Result, Username, AuthUser};
+use paastel::{
+    AuthKubeSecretPort, AuthUser, AuthUsers, Error as PaastelError, Result,
+    Username,
+};
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {}
 
 #[derive(Debug)]
+pub struct KubernetesAdapter {
+    secrets: KubeSecrets,
+}
+
+impl KubernetesAdapter {
+    pub fn new(client: Client) -> Self {
+        Self {
+            secrets: KubeSecrets::new(client),
+        }
+    }
+}
+
+#[derive(Debug)]
 pub struct KubeSecrets {
-    secrets: Api<Secret>,
+    api: Api<Secret>,
 }
 
 impl KubeSecrets {
     pub fn new(client: Client) -> Self {
         Self {
-            secrets: Api::default_namespaced(client),
+            api: Api::default_namespaced(client),
         }
     }
 
@@ -39,24 +55,42 @@ impl KubeSecrets {
         let lp = ListParams::default()
             .match_any()
             .timeout(60)
-            .labels("kubernetes.io/lifecycle=spot");
-        Ok(self.secrets.list(&lp).await?)
+            .labels("paastel.io/api-user-credentials=true");
+        Ok(self.api.list(&lp).await?)
     }
 }
 
 #[async_trait]
-impl AuthKubeSecretPort for KubeSecrets {
+impl AuthKubeSecretPort for KubernetesAdapter {
     async fn list(&self) -> Result<AuthUsers> {
         let secrets = self
+            .secrets
             .get_all()
             .await
             .map_err(|e| PaastelError::KubePort(e.to_string()))?;
 
-        let content: HashMap<<Username, AuthUser> = secrets.into_iter().map(|c| {
-            let auth_user = //
-            todo!()
-            (c.username, auth_user)
-        }).collect();
+        let content: HashMap<Username, AuthUser> = secrets
+            .into_iter()
+            .map(|c| {
+                let data = c.data.unwrap();
+                let metadata = c.metadata;
+                let username = {
+                    let u = &data.get("username").unwrap().0;
+                    String::from_utf8(u.to_owned()).unwrap()
+                };
+                let password = {
+                    let p = &data.get("password").unwrap().0;
+                    String::from_utf8(p.to_owned()).unwrap()
+                };
+                let secrt_name = metadata.name.unwrap();
+                let auth_user = AuthUser::new(
+                    username.clone().into(),
+                    password.into(),
+                    secrt_name,
+                );
+                (username.into(), auth_user)
+            })
+            .collect();
 
         let auth_users = AuthUsers::new(content);
         Ok(auth_users)

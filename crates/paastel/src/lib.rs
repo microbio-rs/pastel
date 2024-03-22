@@ -61,9 +61,17 @@ impl AuthUsers {
         self.0.get(username)
     }
 
-    pub fn insert(&mut self, auth_user: AuthUser) {
-        self.0.insert(auth_user.username.clone(), auth_user);
+    pub fn is_empty(&self) -> bool {
+        self.0.is_empty()
     }
+
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
+
+    // pub fn insert(&mut self, auth_user: AuthUser) {
+    //     self.0.insert(auth_user.username.clone(), auth_user);
+    // }
 }
 
 #[derive(Debug, new)]
