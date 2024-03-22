@@ -16,7 +16,7 @@ rust-version.workspace = true
 [dependencies]
 argon2              = "0.5.3"
 paastel             = { version = "0.1.0", path = "../paastel" }
-rand_core = { version = "0.6.4", features = ["std"] }
+rand_core           = { version = "0.6.4", features = ["std"] }
 thiserror.workspace = true
 
 [lints]
