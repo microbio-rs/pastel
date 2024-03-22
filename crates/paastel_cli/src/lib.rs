@@ -103,7 +103,7 @@ pub async fn execute() -> Result<(), error::Error> {
     }
 
     match matches.subcommand() {
-        Some(("login", sub_m)) => cmd::auth::login(sub_m)?,
+        Some(("login", sub_m)) => cmd::auth::login(sub_m).await?,
         Some(("settings", sub_m)) => cmd::settings::matches(sub_m)?,
         Some(("server", _sub_m)) => paastel_rest::serve().await?,
         _ => command.print_help()?,

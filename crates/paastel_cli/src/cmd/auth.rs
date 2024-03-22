@@ -12,9 +12,16 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+use std::time::Duration;
+
 use clap::{Arg, ArgMatches, Command};
+use reqwest::ClientBuilder;
 
 use crate::error::Error;
+
+// Name your user agent after your app?
+static APP_USER_AGENT: &str =
+    concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"),);
 
 pub fn command() -> Command {
     Command::new("login")
@@ -53,8 +60,8 @@ pub fn command() -> Command {
     // )
 }
 
-pub fn login(matches: &ArgMatches) -> Result<(), Error> {
-    let _username = match matches.get_one::<String>("username") {
+pub async fn login(matches: &ArgMatches) -> Result<(), Error> {
+    let username = match matches.get_one::<String>("username") {
         Some(u) => {
             let u = u.as_str();
             if u.trim().is_empty() {
@@ -66,7 +73,7 @@ pub fn login(matches: &ArgMatches) -> Result<(), Error> {
         None => "ask username",
     };
 
-    let _password = match matches.get_one::<String>("password") {
+    let password = match matches.get_one::<String>("password") {
         Some(u) => {
             let u = u.as_str();
             if u.trim().is_empty() {
@@ -79,7 +86,7 @@ pub fn login(matches: &ArgMatches) -> Result<(), Error> {
     };
 
     // NOTE: validate url and required value
-    let _url = match matches.get_one::<String>("url") {
+    let url = match matches.get_one::<String>("url") {
         Some(u) => {
             let u = u.as_str();
             if u.trim().is_empty() {
@@ -92,25 +99,27 @@ pub fn login(matches: &ArgMatches) -> Result<(), Error> {
     };
 
     // TODO: update settings with username, password, url
-    // TODO: verify credentials
-    // 1. settings have username, password, url api
-    // 2. client call api to /me route
-    // 3. /me route has middleware.Authentication
-    // 3.1 check authorization header
-    // 3.2 create auth service
-    // 3.2.1 this auth service has kubernetes port to secret and port to configmap
-    // 3.3 check if basic authentication (performs the basic authentication)
-    // 3.3.1 get username and password basic_auth
-    // 3.3.2 auth service above get user by username
-    // 3.3.2.1 getuserbyname get all users
-    // 3.3.2.2 getallusers get use secrets
-    // 3.3.2.3 get use secrets call kubernetes and filter
-    // 3.3.2.4 convert secrets into users
-    // TODO: save settings (create file)
 
-    println!("username: {_username}");
-    println!("password: {_password}");
-    println!("url: {_url}");
+    // verify credentials
+    let client = ClientBuilder::new()
+        .user_agent(APP_USER_AGENT)
+        .timeout(Duration::from_secs(5))
+        .build()
+        .unwrap();
+    let res = client
+        .get(&format!("{url}{}", "/me"))
+        .basic_auth(&username, Some(password))
+        .send()
+        .await
+        .unwrap();
+
+    if res.status().is_success() {
+        println!("sucesso");
+    } else {
+        println!("falha");
+    }
+
+    // TODO: save settings (create file)
 
     Ok(())
 }

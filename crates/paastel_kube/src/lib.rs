@@ -37,6 +37,11 @@ impl KubernetesAdapter {
             secrets: KubeSecrets::new(client),
         }
     }
+
+    pub async fn default() -> Self {
+        let client = Client::try_default().await.unwrap();
+        Self::new(client)
+    }
 }
 
 #[derive(Debug)]
