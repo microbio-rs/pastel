@@ -12,17 +12,12 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-pub(crate) mod app;
-pub mod error;
-pub(crate) mod middleware;
-pub(crate) mod prometheus;
-pub(crate) mod state;
-pub(crate) mod utils;
+use std::sync::Arc;
 
-pub async fn serve() -> Result<(), error::Error> {
-    let (_main_server, _metrics_server) = tokio::join!(
-        app::start_main_server(),
-        prometheus::start_metrics_server()
-    );
-    Ok(())
+use derive_new::new;
+use paastel::AuthUseCase;
+
+#[derive(new, Clone)]
+pub(crate) struct AppState {
+    pub(crate) auth_usecase: Arc<dyn AuthUseCase + Send + Sync>,
 }

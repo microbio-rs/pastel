@@ -12,35 +12,51 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+use std::sync::Arc;
 use std::time::Duration;
 
 use axum::http::HeaderName;
-use axum::middleware;
 use axum::response::IntoResponse;
+use axum::Extension;
 use axum::{response::Html, routing::get, Router};
+use paastel::AuthService;
+use paastel_hash::Argon2Adapter;
+use paastel_kube::KubernetesAdapter;
 use tokio::net::TcpListener;
 use tower_http::propagate_header::PropagateHeaderLayer;
 use tower_http::request_id::{MakeRequestUuid, SetRequestIdLayer};
 use tower_http::timeout::TimeoutLayer;
 use tower_http::trace::TraceLayer;
 
-use crate::prometheus;
+use crate::state::AppState;
 use crate::utils;
+use crate::{middleware, prometheus};
 
 pub(crate) async fn start_main_server() {
+    let hash_port = Argon2Adapter::default();
+    let kube_port = KubernetesAdapter::default().await;
+    let auth_usecase =
+        AuthService::new(Box::new(kube_port), Box::new(hash_port));
+    let app_state = AppState::new(Arc::new(auth_usecase));
     let app = Router::new()
         .route("/", get(handler))
         .route("/healthz", get(healthz))
-        .route_layer(middleware::from_fn(prometheus::track_metrics))
-        .layer(SetRequestIdLayer::x_request_id(MakeRequestUuid))
-        .layer(PropagateHeaderLayer::new(HeaderName::from_static(
-            "x-request-id",
-        )))
+        .route("/me", get(me))
+        .route_layer(axum::middleware::from_fn(prometheus::track_metrics))
+        .route_layer(axum::middleware::from_fn_with_state(
+            app_state.clone(),
+            middleware::auth,
+        ))
         .layer((
             TraceLayer::new_for_http(),
             TimeoutLayer::new(Duration::from_secs(10)),
         ))
-        .layer(SetRequestIdLayer::x_request_id(MakeRequestUuid));
+        .layer(SetRequestIdLayer::x_request_id(MakeRequestUuid))
+        .layer(PropagateHeaderLayer::new(HeaderName::from_static(
+            "x-request-id",
+        )))
+        .layer(SetRequestIdLayer::x_request_id(MakeRequestUuid))
+        .with_state(app_state);
 
     let listener = TcpListener::bind("0.0.0.0:3000").await.unwrap();
 
@@ -61,4 +77,11 @@ async fn handler() -> impl IntoResponse {
 
 async fn healthz() -> impl IntoResponse {
     "ok"
+}
+
+async fn me(
+    Extension(current_user): Extension<middleware::CurrentUser>,
+) -> impl IntoResponse {
+    let username = current_user.username;
+    Html(format!("<h1>Hello, {username}</h1>"))
 }

@@ -1543,8 +1543,13 @@ version = "0.1.0"
 dependencies = [
  "async-trait",
  "axum",
+ "base64 0.22.0",
+ "derive-new",
  "metrics",
  "metrics-exporter-prometheus",
+ "paastel",
+ "paastel_hash",
+ "paastel_kube",
  "serde",
  "tokio",
  "tower",
