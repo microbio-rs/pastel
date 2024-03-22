@@ -1,0 +1,23 @@
+[package]
+name                   = "paastel_hash"
+version                = "0.1.0"
+authors.workspace      = true
+categories.workspace   = true
+description.workspace  = true
+edition.workspace      = true
+homepage.workspace     = true
+keywords.workspace     = true
+license.workspace      = true
+repository.workspace   = true
+rust-version.workspace = true
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+argon2              = "0.5.3"
+paastel             = { version = "0.1.0", path = "../paastel" }
+rand_core = { version = "0.6.4", features = ["std"] }
+thiserror.workspace = true
+
+[lints]
+workspace = true
