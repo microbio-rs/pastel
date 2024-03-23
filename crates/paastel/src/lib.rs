@@ -29,6 +29,50 @@ pub enum Error {
 pub type Result<T> = std::result::Result<T, Error>;
 
 ///////////////////////////////////////////////////////////////////////////////
+// App
+///////////////////////////////////////////////////////////////////////////////
+#[derive(Debug, new, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct Name(pub String);
+
+impl From<String> for Name {
+    fn from(value: String) -> Self {
+        Name(value)
+    }
+}
+
+#[derive(Debug, new)]
+pub struct Application {
+    pub name: Name,
+}
+
+#[derive(Debug, new)]
+pub struct CreateAppCommand {
+    pub name: Name,
+}
+
+#[automock]
+#[async_trait]
+pub trait CreateAppUseCase {
+    async fn create(&self, command: &CreateAppCommand) -> Result<()>;
+}
+
+#[derive(new)]
+pub struct AppService {
+    // kube_crd_port: Box<dyn AppKubeSecretPort + Send + Sync>,
+}
+
+#[async_trait]
+impl CreateAppUseCase for AppService {
+    async fn create(&self, _command: &CreateAppCommand) -> Result<()> {
+        Ok(())
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// App End
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
 // Auth
 ///////////////////////////////////////////////////////////////////////////////
 #[derive(Debug, new, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
