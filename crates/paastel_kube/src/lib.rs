@@ -12,29 +12,45 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-use std::{collections::HashMap, result::Result as StdResult};
+use std::{
+    collections::{BTreeMap, HashMap},
+    result::Result as StdResult,
+};
 
 use async_trait::async_trait;
-use k8s_openapi::api::core::v1::Secret;
-use kube::{api::ListParams, core::ObjectList, Api, Client, Error as KError};
+use k8s_openapi::{
+    api::core::v1::Secret,
+    apiextensions_apiserver::pkg::apis::apiextensions::v1::CustomResourceDefinition,
+};
+use kube::{
+    api::{ListParams, Patch, PatchParams, PostParams},
+    core::ObjectList,
+    runtime::{conditions, wait::await_condition},
+    Api, Client, CustomResource, CustomResourceExt, Error as KError, Resource,
+};
 
 use paastel::{
-    AuthKubeSecretPort, AuthUser, AuthUsers, Error as PaastelError, Result,
-    Username,
+    AuthKubeSecretPort, AuthUser, AuthUsers, CreateAppCommand,
+    CreateKubeCRDPort, Error as PaastelError, Result, Username,
 };
+use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
+use tracing::info;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {}
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct KubernetesAdapter {
     secrets: KubeSecrets,
+    crd: KubeCustomResource,
 }
 
 impl KubernetesAdapter {
     pub fn new(client: Client) -> Self {
         Self {
-            secrets: KubeSecrets::new(client),
+            secrets: KubeSecrets::new(client.clone()),
+            crd: KubeCustomResource::new(client),
         }
     }
 
@@ -44,7 +60,7 @@ impl KubernetesAdapter {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct KubeSecrets {
     api: Api<Secret>,
 }
@@ -99,5 +115,84 @@ impl AuthKubeSecretPort for KubernetesAdapter {
 
         let auth_users = AuthUsers::new(content);
         Ok(auth_users)
+    }
+}
+
+#[derive(CustomResource, Clone, Debug, Deserialize, Serialize, JsonSchema)]
+#[kube(
+    group = "application.paastel.io",
+    version = "v1",
+    kind = "App",
+    namespaced
+)]
+struct AppSpec {
+    origin: String,
+}
+
+#[derive(Debug, Clone)]
+pub struct KubeCustomResource {
+    api: Api<App>,
+}
+
+impl KubeCustomResource {
+    pub fn new(client: Client) -> Self {
+        Self {
+            api: Api::default_namespaced(client),
+        }
+    }
+
+    #[allow(dead_code)]
+    async fn init(&self) -> StdResult<(), KError> {
+        info!("init crd App");
+        let client = Client::try_default().await?;
+        let crds: Api<CustomResourceDefinition> = Api::all(client);
+
+        // Apply the CRD so users can create Foo instances in Kubernetes
+        crds.patch(
+            "apps.application.paastel.io",
+            &PatchParams::apply("apps_manager"),
+            &Patch::Apply(App::crd()),
+        )
+        .await?;
+
+        // Wait for the CRD to be ready
+        let _ = tokio::time::timeout(
+            std::time::Duration::from_secs(10),
+            await_condition(
+                crds,
+                "apps.application.paastel.io",
+                conditions::is_crd_established(),
+            ),
+        )
+        .await
+        .unwrap();
+        info!("complete init crd App");
+        Ok(())
+    }
+
+    pub async fn create(&self, name: &str) -> StdResult<(), KError> {
+        let spec = AppSpec {
+            origin: "path".to_string(),
+        };
+        let mut app = App::new(name, spec);
+        let mut annnotations = BTreeMap::new();
+        annnotations.insert(
+            "paastal.io/created-by".to_string(),
+            "admin@paastel.io".to_string(),
+        );
+        app.meta_mut().annotations = Some(annnotations);
+        // println!("{}", serde_yaml::to_string(&app).unwrap()); // crd yaml
+        self.api.create(&PostParams::default(), &app).await?;
+        Ok(())
+    }
+}
+
+#[async_trait]
+impl CreateKubeCRDPort for KubernetesAdapter {
+    async fn crd(&self, command: &CreateAppCommand) -> Result<()> {
+        // NOTE: run just one
+        // self.crd.init().await.unwrap();
+        self.crd.create(&command.name.0.as_str()).await.unwrap();
+        Ok(())
     }
 }

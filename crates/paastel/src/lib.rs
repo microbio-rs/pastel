@@ -43,11 +43,19 @@ impl From<String> for Name {
 #[derive(Debug, new)]
 pub struct Application {
     pub name: Name,
+    pub namespace: String,
 }
 
 #[derive(Debug, new)]
 pub struct CreateAppCommand {
     pub name: Name,
+    pub namespace: String,
+}
+
+#[automock]
+#[async_trait]
+pub trait CreateKubeCRDPort {
+    async fn crd(&self, command: &CreateAppCommand) -> Result<()>;
 }
 
 #[automock]
@@ -58,12 +66,13 @@ pub trait CreateAppUseCase {
 
 #[derive(new)]
 pub struct AppService {
-    // kube_crd_port: Box<dyn AppKubeSecretPort + Send + Sync>,
+    kube_crd_port: Box<dyn CreateKubeCRDPort + Send + Sync>,
 }
 
 #[async_trait]
 impl CreateAppUseCase for AppService {
-    async fn create(&self, _command: &CreateAppCommand) -> Result<()> {
+    async fn create(&self, command: &CreateAppCommand) -> Result<()> {
+        self.kube_crd_port.crd(command).await.unwrap();
         Ok(())
     }
 }

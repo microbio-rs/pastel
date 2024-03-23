@@ -21,7 +21,7 @@ use axum::response::IntoResponse;
 use axum::routing::post;
 use axum::{response::Html, routing::get, Router};
 use axum::{Extension, Json};
-use paastel::{AppService, AuthService};
+use paastel::{AppService, AuthService, CreateAppCommand, Name};
 use paastel_hash::Argon2Adapter;
 use paastel_kube::KubernetesAdapter;
 use serde::{Deserialize, Serialize};
@@ -41,8 +41,8 @@ pub(crate) async fn start_main_server() {
     let hash_port = Argon2Adapter::default();
     let kube_port = KubernetesAdapter::default().await;
     let auth_usecase =
-        AuthService::new(Box::new(kube_port), Box::new(hash_port));
-    let create_app_usecase = AppService::new();
+        AuthService::new(Box::new(kube_port.clone()), Box::new(hash_port));
+    let create_app_usecase = AppService::new(Box::new(kube_port));
     let app_state =
         AppState::new(Arc::new(create_app_usecase), Arc::new(auth_usecase));
     let app = Router::new()
@@ -64,7 +64,7 @@ pub(crate) async fn start_main_server() {
         ))
         .layer((
             TraceLayer::new_for_http(),
-            TimeoutLayer::new(Duration::from_secs(10)),
+            TimeoutLayer::new(Duration::from_secs(20)),
         ))
         .layer(SetRequestIdLayer::x_request_id(MakeRequestUuid))
         .layer(PropagateHeaderLayer::new(HeaderName::from_static(
@@ -109,14 +109,17 @@ pub struct CreateAppRequest {
 
 async fn crete_app(
     State(AppState {
-        create_app_usecase: _,
-        ..
+        create_app_usecase, ..
     }): State<AppState>,
     Extension(current_user): Extension<middleware::CurrentUser>,
     Path(namespace): Path<String>,
     Json(CreateAppRequest { name }): Json<CreateAppRequest>,
 ) -> impl IntoResponse {
     info!("requesting creating app");
+
+    let command =
+        CreateAppCommand::new(Name::new(name.clone()), namespace.clone());
+    create_app_usecase.create(&command).await.unwrap();
 
     Html(format!(
         "<h1>Hello, {current_user:?} create {name} on {namespace}</h1>"
