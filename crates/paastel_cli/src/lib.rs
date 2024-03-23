@@ -63,6 +63,7 @@ pub async fn execute() -> Result<(), error::Error> {
             .about("Starts the PaaStel rest server.")
             .long_about("This command starts the PaaStel server. Ensures the server is running inside your cluster. Normally you don't need to run this command manually.")
         )
+        .subcommand(cmd::push::command())
          .arg(
             Arg::new("verbose")
             .long("verbose")

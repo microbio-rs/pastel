@@ -13,5 +13,6 @@
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 pub mod auth;
+pub mod push;
 pub mod settings;
 pub mod version;
