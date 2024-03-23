@@ -12,9 +12,16 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-use clap::{Arg, ArgMatches, Command};
+use std::{env::current_dir, path::Path, time::Duration};
 
-use crate::error::Error;
+use clap::{Arg, ArgMatches, Command};
+use reqwest::ClientBuilder;
+
+use crate::{error::Error, util::compress};
+
+// Name your user agent after your app?
+static APP_USER_AGENT: &str =
+    concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"),);
 
 pub fn command() -> Command {
     Command::new("push")
@@ -24,33 +31,13 @@ pub fn command() -> Command {
             an Paastel instance and updates the settings file with the \
             generated authentication token",
         )
-        .arg(Arg::new("url"))
         .arg(
-            Arg::new("username")
-                .long("username")
-                .env("PAASTEL_USERNAME")
-                .short('u')
-                .help("username that will be used to login"),
+            Arg::new("name")
+                .long("name")
+                .env("PAASTEL_NAME")
+                .short('n')
+                .help("that will be used to login"),
         )
-        .arg(
-            Arg::new("password")
-                .long("password")
-                .env("PAASTEL_PASSWORD")
-                .short('p')
-                .help("password that will be used to login"),
-        )
-    // .arg(
-    //     Arg::new("trust-ca")
-    //         .long("trust-ca")
-    //         .help("automatically trust the unknown CA")
-    //         .action(clap::ArgAction::SetTrue),
-    // )
-    // .arg(
-    //     Arg::new("oidc")
-    //         .long("oidc")
-    //         .help("perform OIDC authentication (user and password will be ignored)")
-    //         .action(clap::ArgAction::SetTrue),
-    // )
 }
 
 // Push pushes an app
@@ -61,10 +48,50 @@ pub fn command() -> Command {
 // TODO: deploy
 // TODO: wait for app
 pub async fn push(_matches: &ArgMatches) -> Result<(), Error> {
+    // NOTE: name is optional or generating one or get from folder name
     // TODO: create app
     // TODO: compress folder
     // TODO: upload  /namespaces/:namespace/applications/:app/store
     // TODO: upload  s3
 
-    todo!()
+    let out_dir = Path::new("/tmp/paastel_compress.zip");
+
+    // compress::dir(
+    //     current_dir().unwrap().to_str().unwrap(),
+    //     "/tmp/paastel_compress.zip",
+    // )
+    // .unwrap();
+
+    // verify credentials
+    let client = ClientBuilder::new()
+        .user_agent(APP_USER_AGENT)
+        .timeout(Duration::from_secs(5))
+        .build()
+        .unwrap();
+
+    let content: Vec<u8> = tokio::fs::read(out_dir).await?;
+
+    let part = reqwest::multipart::Part::bytes(content)
+        .mime_str("application/zip")
+        .unwrap()
+        .file_name(out_dir.file_name().unwrap().to_str().unwrap());
+
+    let file = reqwest::multipart::Form::new().part("file", part);
+
+    let res = client
+        .post(
+            "http://127.0.0.1:3000/namespaces/default/applications/mysuperapp/store",
+        )
+        .basic_auth("admin@paastel.io", Some("password"))
+        .multipart(file)
+        .send()
+        .await
+        .unwrap();
+
+    if res.status().is_success() {
+        println!("sucesso");
+    } else {
+        println!("falha");
+    }
+    Ok(())
 }

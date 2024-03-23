@@ -19,13 +19,15 @@ color-print        = "0.3.5"
 dirs               = "5.0.1"
 paastel_rest       = { version = "0.1.0", path = "../paastel_rest" }
 prettytable-rs     = { version = "0.10.0", default-features = false }
-reqwest = { version = "0.12.1", features = ["json"] }
+reqwest = { version = "0.12.1", features = ["json", "multipart"] }
 serde.workspace    = true
-tokio              = { version = "1.36.0", features = ["macros", "rt-multi-thread"] }
+tokio              = { version = "1.36.0", features = ["fs", "macros", "rt-multi-thread"] }
 toml               = { version = "0.8.11", features = ["preserve_order"] }
 tracing.workspace  = true
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 url                = "2.5.0"
+walkdir = "2.5.0"
+zip = "0.6.6"
 
 [lints]
 workspace = true
