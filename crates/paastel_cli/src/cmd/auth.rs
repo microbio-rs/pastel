@@ -15,6 +15,7 @@
 use std::time::Duration;
 
 use clap::{Arg, ArgMatches, Command};
+use requestty::Question;
 use reqwest::ClientBuilder;
 
 use crate::error::Error;
@@ -46,78 +47,96 @@ pub fn command() -> Command {
                 .short('p')
                 .help("password that will be used to login"),
         )
-    // .arg(
-    //     Arg::new("trust-ca")
-    //         .long("trust-ca")
-    //         .help("automatically trust the unknown CA")
-    //         .action(clap::ArgAction::SetTrue),
-    // )
-    // .arg(
-    //     Arg::new("oidc")
-    //         .long("oidc")
-    //         .help("perform OIDC authentication (user and password will be ignored)")
-    //         .action(clap::ArgAction::SetTrue),
-    // )
 }
 
-pub async fn login(matches: &ArgMatches) -> Result<(), Error> {
-    let username = match matches.get_one::<String>("username") {
-        Some(u) => {
-            let u = u.as_str();
-            if u.trim().is_empty() {
-                panic!("invalid username");
-            } else {
-                u
-            }
-        }
-        None => "ask username",
-    };
+fn is_valid(password: &str, _: &requestty::Answers) -> bool {
+    password.contains(|c: char| c.is_ascii_digit())
+        && password.contains(char::is_alphabetic)
+}
 
-    let password = match matches.get_one::<String>("password") {
-        Some(u) => {
-            let u = u.as_str();
-            if u.trim().is_empty() {
-                panic!("invalid username");
-            } else {
-                u
-            }
-        }
-        None => "ask username",
-    };
+fn letter_and_numbers(
+    password: &str,
+    ans: &requestty::Answers,
+) -> Result<(), String> {
+    if is_valid(password, ans) {
+        Ok(())
+    } else {
+        Err("Password needs to have at least 1 letter and 1 number.".to_owned())
+    }
+}
 
-    // NOTE: validate url and required value
-    let url = match matches.get_one::<String>("url") {
-        Some(u) => {
-            let u = u.as_str();
-            if u.trim().is_empty() {
-                panic!("invalid username");
-            } else {
-                u
-            }
-        }
-        None => "ask username",
-    };
+pub async fn login(_matches: &ArgMatches) -> Result<(), Error> {
+    let questions = vec![
+        Question::password("password1")
+            .message("Enter a password")
+            .validate(letter_and_numbers)
+            .build(),
+        Question::password("password2")
+            .message("Enter a masked password")
+            .mask('*')
+            .validate_on_key(is_valid)
+            .validate(letter_and_numbers)
+            .build(),
+    ];
+
+    println!("{:#?}", requestty::prompt(questions));
+    // let username = match matches.get_one::<String>("username") {
+    //     Some(u) => {
+    //         let u = u.as_str();
+    //         if u.trim().is_empty() {
+    //             panic!("invalid username");
+    //         } else {
+    //             u
+    //         }
+    //     }
+    //     None => "ask username",
+    // };
+
+    // let password = match matches.get_one::<String>("password") {
+    //     Some(u) => {
+    //         let u = u.as_str();
+    //         if u.trim().is_empty() {
+    //             panic!("invalid username");
+    //         } else {
+    //             u
+    //         }
+    //     }
+    //     None => "ask username",
+    // };
+
+    // // NOTE: validate url and required value
+    // let url = match matches.get_one::<String>("url") {
+    //     Some(u) => {
+    //         let u = u.as_str();
+    //         if u.trim().is_empty() {
+    //             panic!("invalid username");
+    //         } else {
+    //             u
+    //         }
+    //     }
+    //     None => "ask username",
+    // };
 
     // TODO: update settings with username, password, url
 
-    // verify credentials
-    let client = ClientBuilder::new()
-        .user_agent(APP_USER_AGENT)
-        .timeout(Duration::from_secs(5))
-        .build()
-        .unwrap();
-    let res = client
-        .get(&format!("{url}{}", "/me"))
-        .basic_auth(username, Some(password))
-        .send()
-        .await
-        .unwrap();
+    // // verify credentials
+    // let client = ClientBuilder::new()
+    //     .user_agent(APP_USER_AGENT)
+    //     .timeout(Duration::from_secs(5))
+    //     .build()
+    //     .unwrap();
+    // let res = client
+    //     .get(&format!("{url}{}", "/me"))
+    //     .basic_auth(username, Some(password))
+    //     .send()
+    //     .await
+    //     .unwrap();
 
-    if res.status().is_success() {
-        println!("sucesso");
-    } else {
-        println!("falha");
-    }
+    // if res.status().is_success() {
+    //     println!("sucesso");
+    // } else {
+    //     println!("falha");
+    // }
 
     // TODO: save settings (create file)
 
