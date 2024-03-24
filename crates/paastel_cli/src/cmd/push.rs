@@ -84,7 +84,7 @@ pub async fn push(_matches: &ArgMatches) -> Result<(), Error> {
         .unwrap();
 
     if res.status().is_success() {
-        println!("sucesso");
+        println!("upload: sucesso");
     } else {
         println!("falha");
     }

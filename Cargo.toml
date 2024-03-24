@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members  = ["crates/paastel", "crates/paastel_cli", "crates/paastel_hash", "crates/paastel_kube", "crates/paastel_rest"]
+members  = ["crates/paastel", "crates/paastel_cli", "crates/paastel_hash", "crates/paastel_kube", "crates/paastel_rest", "crates/paastel_storage", "crates/paastel_uid"]
 
 [workspace.package]
 authors      = ["Murilo Ijanc' <mbsd@m0x.ru>"]
@@ -25,7 +25,7 @@ unimplemented = "warn"
 serde             = { version = "1.0.197", features = ["derive"] }
 tracing           = "0.1.40"
 mockall           = "0.12.1"
-async-trait       = "0.1.78"
+async-trait       = "0.1.79"
 anyhow            = "1.0.81"
 thiserror         = "1.0.58"
 uuid              = "1.7.0"
