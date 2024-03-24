@@ -12,12 +12,12 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-use std::{env::current_dir, path::Path, time::Duration};
+use std::{path::Path, time::Duration};
 
 use clap::{Arg, ArgMatches, Command};
 use reqwest::ClientBuilder;
 
-use crate::{error::Error, util::compress};
+use crate::{error::Error};
 
 // Name your user agent after your app?
 static APP_USER_AGENT: &str =

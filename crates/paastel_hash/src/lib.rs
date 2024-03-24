@@ -48,7 +48,7 @@ impl<'a> AuthHashPasswordPort for Argon2Adapter<'a> {
         password: &str,
         password_hash: &str,
     ) -> paastel::Result<()> {
-        let parsed_hash = PasswordHash::new(&password_hash).unwrap();
+        let parsed_hash = PasswordHash::new(password_hash).unwrap();
         self.inner
             .verify_password(password.as_bytes(), &parsed_hash)
             .unwrap();

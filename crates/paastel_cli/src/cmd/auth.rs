@@ -108,7 +108,7 @@ pub async fn login(matches: &ArgMatches) -> Result<(), Error> {
         .unwrap();
     let res = client
         .get(&format!("{url}{}", "/me"))
-        .basic_auth(&username, Some(password))
+        .basic_auth(username, Some(password))
         .send()
         .await
         .unwrap();
