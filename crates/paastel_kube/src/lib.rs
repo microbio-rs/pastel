@@ -77,7 +77,7 @@ impl KubeSecrets {
             .match_any()
             .timeout(60)
             .labels("paastel.io/api-user-credentials=true");
-        Ok(self.api.list(&lp).await?)
+        self.api.list(&lp).await
     }
 }
 
@@ -106,7 +106,7 @@ impl AuthKubeSecretPort for KubernetesAdapter {
                 let secrt_name = metadata.name.unwrap();
                 let auth_user = AuthUser::new(
                     username.clone().into(),
-                    password.into(),
+                    password,
                     secrt_name,
                 );
                 (username.into(), auth_user)
@@ -192,7 +192,7 @@ impl CreateKubeCRDPort for KubernetesAdapter {
     async fn crd(&self, command: &CreateAppCommand) -> Result<()> {
         // NOTE: run just one
         // self.crd.init().await.unwrap();
-        self.crd.create(&command.name.0.as_str()).await.unwrap();
+        self.crd.create(command.name.0.as_str()).await.unwrap();
         Ok(())
     }
 }
