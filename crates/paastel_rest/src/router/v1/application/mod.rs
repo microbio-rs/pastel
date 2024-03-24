@@ -1,9 +1,9 @@
 // Copyright (c) 2024 Murilo Ijanc' <mbsd@m0x.ru>
-//
+
 // Permission to use, copy, modify, and distribute this software for any
 // purpose with or without fee is hereby granted, provided that the above
 // copyright notice and this permission notice appear in all copies.
-//
+
 // THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
 // WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
@@ -12,18 +12,22 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-pub(crate) mod app;
-pub mod error;
-pub(crate) mod middleware;
-pub(crate) mod prometheus;
-pub(crate) mod router;
-pub(crate) mod state;
-pub(crate) mod utils;
+use axum::{routing::post, Router};
 
-pub async fn serve() -> Result<(), error::Error> {
-    let (_main_server, _metrics_server) = tokio::join!(
-        app::start_main_server(),
-        prometheus::start_metrics_server()
-    );
-    Ok(())
+use crate::state::AppState;
+
+pub(crate) mod create;
+pub(crate) mod upload;
+
+pub(crate) fn make_route(state: AppState) -> Router<AppState> {
+    Router::new()
+        .route(
+            "/namespaces/:namespace/applications",
+            post(create::crete_app),
+        )
+        .route(
+            "/namespaces/:namespace/applications/:app/store",
+            post(upload::upload_app),
+        )
+        .with_state(state)
 }

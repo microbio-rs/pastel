@@ -12,18 +12,20 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-pub(crate) mod app;
-pub mod error;
-pub(crate) mod middleware;
-pub(crate) mod prometheus;
-pub(crate) mod router;
-pub(crate) mod state;
-pub(crate) mod utils;
+use axum::Router;
 
-pub async fn serve() -> Result<(), error::Error> {
-    let (_main_server, _metrics_server) = tokio::join!(
-        app::start_main_server(),
-        prometheus::start_metrics_server()
-    );
-    Ok(())
+use crate::{middleware, state::AppState};
+
+pub mod application;
+pub(crate) mod me;
+
+pub(crate) fn make_route(state: AppState) -> Router<AppState> {
+    Router::new()
+        .route("/me", axum::routing::get(me::get))
+        .merge(application::make_route(state.clone()))
+        .route_layer(axum::middleware::from_fn_with_state(
+            state.clone(),
+            middleware::auth,
+        ))
+        .with_state(state)
 }

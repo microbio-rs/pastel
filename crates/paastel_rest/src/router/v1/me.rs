@@ -12,18 +12,18 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-pub(crate) mod app;
-pub mod error;
-pub(crate) mod middleware;
-pub(crate) mod prometheus;
-pub(crate) mod router;
-pub(crate) mod state;
-pub(crate) mod utils;
+use axum::{
+    response::{Html, IntoResponse},
+    Extension,
+};
+use tracing::info;
 
-pub async fn serve() -> Result<(), error::Error> {
-    let (_main_server, _metrics_server) = tokio::join!(
-        app::start_main_server(),
-        prometheus::start_metrics_server()
-    );
-    Ok(())
+use crate::middleware;
+
+pub(crate) async fn get(
+    Extension(current_user): Extension<middleware::CurrentUser>,
+) -> impl IntoResponse {
+    info!("requesting me");
+    let username = current_user.username;
+    Html(format!("<h1>Hello, {username}</h1>"))
 }
