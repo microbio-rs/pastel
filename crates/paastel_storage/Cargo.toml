@@ -1,21 +1,23 @@
 [package]
-name = "paastel_storage"
-version = "0.1.0"
-authors.workspace = true
-categories.workspace = true
-description.workspace = true
-edition.workspace = true
-homepage.workspace = true
-keywords.workspace = true
-license.workspace = true
-repository.workspace = true
+name                   = "paastel_storage"
+version                = "0.1.0"
+authors.workspace      = true
+categories.workspace   = true
+description.workspace  = true
+edition.workspace      = true
+homepage.workspace     = true
+keywords.workspace     = true
+license.workspace      = true
+repository.workspace   = true
 rust-version.workspace = true
 
 [dependencies]
-async-trait.workspace = true
-aws-sdk-s3 = "1.20.0"
-paastel = { version = "0.1.0", path = "../paastel" }
-thiserror.workspace = true
+async-trait.workspace  = true
+aws-sdk-s3             = "1.20.0"
+aws-smithy-runtime-api = { version = "1.2.0", features = ["client"] }
+derive-new.workspace   = true
+paastel                = { version = "0.1.0", path = "../paastel" }
+thiserror.workspace    = true
 
 [lints]
 workspace = true
