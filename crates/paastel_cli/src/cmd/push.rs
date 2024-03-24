@@ -41,28 +41,23 @@ pub fn command() -> Command {
 }
 
 // Push pushes an app
-// TODO: validate
-// TODO: stage
 // TODO: (tail logs)
 // TODO: wait for staging to be done (complete or fail)
 // TODO: deploy
 // TODO: wait for app
 pub async fn push(_matches: &ArgMatches) -> Result<(), Error> {
-    // NOTE: name is optional or generating one or get from folder name
-    // TODO: create app
-    // TODO: compress folder
-    // TODO: upload  /namespaces/:namespace/applications/:app/store
-    // TODO: upload  s3
-
+    // NOTE: in memory
     let out_dir = Path::new("/tmp/paastel_compress.zip");
 
+    // NOTE: name is optional or generating one or get from folder name
+    // TODO: compress folder (ok)
     // compress::dir(
     //     current_dir().unwrap().to_str().unwrap(),
     //     "/tmp/paastel_compress.zip",
     // )
     // .unwrap();
 
-    // verify credentials
+    // TODO: upload  minio->s3
     let client = ClientBuilder::new()
         .user_agent(APP_USER_AGENT)
         .timeout(Duration::from_secs(5))
@@ -93,5 +88,8 @@ pub async fn push(_matches: &ArgMatches) -> Result<(), Error> {
     } else {
         println!("falha");
     }
+
+    // TODO: stage `build`
+
     Ok(())
 }
