@@ -16,46 +16,39 @@ pub mod cmd;
 pub mod error;
 pub mod util;
 
-use util::style;
+use util::{flag, style};
 
 use std::path::PathBuf;
 
 use clap::{builder::Styles, Arg, ArgAction, Command};
 
-const HELP_TEMPLATE: &str = "
-{about}
-
-Usage:
-  {usage}
-
-Options:
-{options}
-
-Commands:
-{subcommands}
-
-{before-help}";
-
-const ABOUT_TEMPLATE: &str = " 
-           ██████╗  █████╗  █████╗ ███████╗████████╗███████╗██╗     
-           ██╔══██╗██╔══██╗██╔══██╗██╔════╝╚══██╔══╝██╔════╝██║     
-           ██████╔╝███████║███████║███████╗   ██║   █████╗  ██║     
-           ██╔═══╝ ██╔══██║██╔══██║╚════██║   ██║   ██╔══╝  ██║     
-           ██║     ██║  ██║██║  ██║███████║   ██║   ███████╗███████╗
-           ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝   ╚═╝   ╚══════╝╚══════╝
-        paastel cli is the official command line interface for PaaStel";
-
 pub async fn execute() -> Result<(), error::Error> {
     init_tracing();
 
+    let usage = color_print::cstr!(
+        "<cyan,bold>paastel</> <cyan>[OPTIONS] [COMMAND]</>"
+    );
+
     let mut command = Command::new("paastel")
         .next_display_order(800)
-        .about(ABOUT_TEMPLATE)
-        .before_long_help("See 'paastel help <command>' for more information on a specific command.")
         .disable_version_flag(true)
         .term_width(80)
-        .help_template(HELP_TEMPLATE)
+        .help_template(color_print::cstr!(
+            "\
+CLI to interact with PaaStel
+
+<green,bold>Usage:</> {usage}
+
+<green,bold>Options:</>
+{options}
+
+<green,bold>Commands:</>
+{subcommands}
+
+See '<cyan,bold>paastel help</> <cyan><<command>></>' for more information on a specific command.\n",
+        ))
         .styles(get_styles())
+        .override_usage(usage)
         .subcommand(cmd::settings::command())
         .subcommand(cmd::auth::command())
         .subcommand(
@@ -89,13 +82,7 @@ pub async fn execute() -> Result<(), error::Error> {
                 .env("PAASTEL_SETTINGS")
                 .help("Set path of settings file"),
         )
-        .arg(
-            Arg::new("version")
-                .short('V')
-                .long("version")
-                .action(clap::ArgAction::SetTrue)
-                .help("version of paastel")
-        );
+        .arg(flag("version", "Print version info and exit").short('V'));
     let matches = command.clone().get_matches();
 
     if *matches.get_one::<bool>("version").unwrap() {
