@@ -17,7 +17,7 @@ use std::{path::Path, time::Duration};
 use clap::{Arg, ArgMatches, Command};
 use reqwest::ClientBuilder;
 
-use crate::{error::Error};
+use crate::error::Error;
 
 // Name your user agent after your app?
 static APP_USER_AGENT: &str =

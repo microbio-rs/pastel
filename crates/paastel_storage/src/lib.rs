@@ -14,6 +14,4 @@
 
 pub mod s3;
 
-pub mod prelude {
-    
-}
+pub mod prelude {}
