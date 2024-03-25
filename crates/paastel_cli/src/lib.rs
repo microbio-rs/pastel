@@ -65,13 +65,13 @@ See '<cyan,bold>paastel help</> <cyan><<command>></>' for more information on a 
             .action(ArgAction::Count)
             .global(true),
         )
-        .arg(Arg::new("quiet").help("Do not print cargo log messages").short('q').global(true))
-        .arg(
-            Arg::new("color")
-                .help("Coloring: auto, always, never")
-                .value_name("WHEN")
-                .global(true),
-        )
+        // .arg(Arg::new("quiet").help("Do not print cargo log messages").short('q').global(true))
+        // .arg(
+        //     Arg::new("color")
+        //         .help("Coloring: auto, always, never")
+        //         .value_name("WHEN")
+        //         .global(true),
+        // )
         .arg(
             Arg::new("settings-file")
                 .long("settings-file")

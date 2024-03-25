@@ -12,40 +12,38 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-use std::time::Duration;
+// use std::time::Duration;
 
-use clap::{Arg, ArgMatches, Command};
+use clap::{Arg, ArgAction, ArgMatches, Command};
 use requestty::Question;
-use reqwest::ClientBuilder;
+// use reqwest::ClientBuilder;
 
-use crate::error::Error;
+use crate::{error::Error, util::flag};
 
 // Name your user agent after your app?
-static APP_USER_AGENT: &str =
-    concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"),);
+// static APP_USER_AGENT: &str =
+// concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"),);
 
 pub fn command() -> Command {
+    let usage = color_print::cstr!(
+        "<cyan,bold>paastel login</> <cyan>[OPTIONS] <<URL>></>"
+    );
     Command::new("login")
-        .about("PaaStel login to the server")
-        .long_about(
-            "The login command allows you to authenticate against \
-            an Paastel instance and updates the settings file with the \
-            generated authentication token",
-        )
-        .arg(Arg::new("url"))
+        .about("PaaStel login to the server at <url>")
+        .override_usage(usage)
         .arg(
-            Arg::new("username")
-                .long("username")
-                .env("PAASTEL_USERNAME")
-                .short('u')
-                .help("username that will be used to login"),
+            Arg::new("url")
+                .value_name("URL")
+                .action(ArgAction::Set)
+                .required(true),
         )
         .arg(
-            Arg::new("password")
-                .long("password")
-                .env("PAASTEL_PASSWORD")
-                .short('p')
-                .help("password that will be used to login"),
+            flag("username", "Username that will be used to login")
+                .env("PAASTEL_USERNAME"),
+        )
+        .arg(
+            flag("password", "Password that will be used to login")
+                .env("PAASTEL_PASSWORD"),
         )
 }
 
