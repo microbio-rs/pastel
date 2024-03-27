@@ -2283,6 +2283,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "paastel_settings"
+version = "0.1.0"
+
+[[package]]
 name = "paastel_storage"
 version = "0.1.0"
 dependencies = [

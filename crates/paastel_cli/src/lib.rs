@@ -16,55 +16,51 @@ pub mod cmd;
 pub mod error;
 pub mod util;
 
-use util::{flag, style};
+// use util::flag;
 
 use std::path::PathBuf;
 
-use clap::{builder::Styles, Arg, ArgAction, Command};
+use clap::{Arg, Command};
 
 pub async fn execute() -> Result<(), error::Error> {
-    init_tracing();
+    // init_tracing();
 
-    let usage = color_print::cstr!(
-        "<cyan,bold>paastel</> <cyan>[OPTIONS] [COMMAND]</>"
-    );
+    // let usage = color_print::cstr!(
+    //     "<cyan,bold>paastel</> <cyan>[OPTIONS] [COMMAND]</>"
+    // );
 
     let mut command = Command::new("paastel")
-        .next_display_order(800)
-        .disable_version_flag(true)
-        .term_width(80)
-        .help_template(color_print::cstr!(
-            "\
-CLI to interact with PaaStel
-
-<green,bold>Usage:</> {usage}
-
-<green,bold>Options:</>
-{options}
-
-<green,bold>Commands:</>
-{subcommands}
-
-See '<cyan,bold>paastel help</> <cyan><<command>></>' for more information on a specific command.\n",
-        ))
-        .styles(get_styles())
-        .override_usage(usage)
-        .subcommand(cmd::settings::command())
+        //         .next_display_order(800)
+        //         .disable_version_flag(true)
+        //         .term_width(80)
+        //         .help_template(color_print::cstr!(
+        //             "\
+        // CLI to interact with PaaStel
+        // <green,bold>Usage:</> {usage}
+        // <green,bold>Options:</>
+        // {options}
+        // <green,bold>Commands:</>
+        // {subcommands}
+        // See '<cyan,bold>paastel help</> <cyan><<command>></>' for more information on a specific command.\n",
+        //         ))
+        //         .styles(get_styles())
+        //         .override_usage(usage)
+        // .subcommand(cmd::settings::command())
         .subcommand(cmd::auth::command())
-        .subcommand(
-            Command::new("server")
-            .about("Starts the PaaStel rest server.")
-            .long_about("This command starts the PaaStel server. Ensures the server is running inside your cluster. Normally you don't need to run this command manually.")
-        )
-        .subcommand(cmd::push::command())
-         .arg(
-            Arg::new("verbose")
-            .long("verbose")
-            .help("Use verbose output (-vv very verbose)")
-            .short('v')
-            .action(ArgAction::Count)
-            .global(true),
-        )
+        // .subcommand(
+        //     Command::new("server")
+        //     .about("Starts the PaaStel rest server.")
+        //     .long_about("This command starts the PaaStel server. Ensures the server is running inside your cluster. Normally you don't need to run this command manually.")
+        // )
+        // .subcommand(cmd::push::command())
+        //  .arg(
+        //     Arg::new("verbose")
+        //     .long("verbose")
+        //     .help("Use verbose output (-vv very verbose)")
+        //     .short('v')
+        //     .action(ArgAction::Count)
+        //     .global(true),
+        // )
         // .arg(Arg::new("quiet").help("Do not print cargo log messages").short('q').global(true))
         // .arg(
         //     Arg::new("color")
@@ -81,42 +77,42 @@ See '<cyan,bold>paastel help</> <cyan><<command>></>' for more information on a 
                 )
                 .env("PAASTEL_SETTINGS")
                 .help("Set path of settings file"),
-        )
-        .arg(flag("version", "Print version info and exit").short('V'));
+        );
+    // .arg(flag("version", "Print version info and exit").short('V'));
     let matches = command.clone().get_matches();
 
-    if *matches.get_one::<bool>("version").unwrap() {
-        println!("{}", cmd::version::get_version_string());
-        return Ok(());
-    }
+    // if *matches.get_one::<bool>("version").unwrap() {
+    //     println!("{}", cmd::version::get_version_string());
+    //     return Ok(());
+    // }
 
     match matches.subcommand() {
         Some(("login", sub_m)) => cmd::auth::login(sub_m).await?,
-        Some(("push", sub_m)) => cmd::push::push(sub_m).await?,
-        Some(("settings", sub_m)) => cmd::settings::matches(sub_m)?,
-        Some(("server", _sub_m)) => paastel_rest::serve().await?,
+        // Some(("push", sub_m)) => cmd::push::push(sub_m).await?,
+        // Some(("settings", sub_m)) => cmd::settings::matches(sub_m)?,
+        // Some(("server", _sub_m)) => paastel_rest::serve().await?,
         _ => command.print_help()?,
     }
 
     Ok(())
 }
 
-fn init_tracing() {
-    use tracing_subscriber::EnvFilter;
+// fn init_tracing() {
+//     use tracing_subscriber::EnvFilter;
 
-    tracing_subscriber::fmt()
-        .with_env_filter(EnvFilter::from_default_env())
-        .with_target(true)
-        .init();
-}
+//     tracing_subscriber::fmt()
+//         .with_env_filter(EnvFilter::from_default_env())
+//         .with_target(true)
+//         .init();
+// }
 
-pub fn get_styles() -> Styles {
-    clap::builder::styling::Styles::styled()
-        .header(style::HEADER)
-        .usage(style::USAGE)
-        .literal(style::LITERAL)
-        .placeholder(style::PLACEHOLDER)
-        .error(style::ERROR)
-        .valid(style::VALID)
-        .invalid(style::INVALID)
-}
+// pub fn get_styles() -> Styles {
+//     clap::builder::styling::Styles::styled()
+//         .header(style::HEADER)
+//         .usage(style::USAGE)
+//         .literal(style::LITERAL)
+//         .placeholder(style::PLACEHOLDER)
+//         .error(style::ERROR)
+//         .valid(style::VALID)
+//         .invalid(style::INVALID)
+// }
