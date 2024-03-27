@@ -29,7 +29,7 @@ pub async fn execute() -> Result<(), error::Error> {
     //     "<cyan,bold>paastel</> <cyan>[OPTIONS] [COMMAND]</>"
     // );
 
-    let mut command = Command::new("paastel")
+    let command = Command::new("paastel")
         //         .next_display_order(800)
         //         .disable_version_flag(true)
         //         .term_width(80)
@@ -46,7 +46,7 @@ pub async fn execute() -> Result<(), error::Error> {
         //         .styles(get_styles())
         //         .override_usage(usage)
         // .subcommand(cmd::settings::command())
-        .subcommand(cmd::auth::command())
+        // .subcommand(cmd::auth::command())
         // .subcommand(
         //     Command::new("server")
         //     .about("Starts the PaaStel rest server.")
@@ -79,20 +79,20 @@ pub async fn execute() -> Result<(), error::Error> {
                 .help("Set path of settings file"),
         );
     // .arg(flag("version", "Print version info and exit").short('V'));
-    let matches = command.clone().get_matches();
+    let _matches = command.clone().get_matches();
 
     // if *matches.get_one::<bool>("version").unwrap() {
     //     println!("{}", cmd::version::get_version_string());
     //     return Ok(());
     // }
 
-    match matches.subcommand() {
-        Some(("login", sub_m)) => cmd::auth::login(sub_m).await?,
-        // Some(("push", sub_m)) => cmd::push::push(sub_m).await?,
-        // Some(("settings", sub_m)) => cmd::settings::matches(sub_m)?,
-        // Some(("server", _sub_m)) => paastel_rest::serve().await?,
-        _ => command.print_help()?,
-    }
+    // match matches.subcommand() {
+    //     Some(("login", sub_m)) => cmd::auth::login(sub_m).await?,
+    //     // Some(("push", sub_m)) => cmd::push::push(sub_m).await?,
+    //     // Some(("settings", sub_m)) => cmd::settings::matches(sub_m)?,
+    //     // Some(("server", _sub_m)) => paastel_rest::serve().await?,
+    //     _ => command.print_help()?,
+    // }
 
     Ok(())
 }
