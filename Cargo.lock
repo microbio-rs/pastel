@@ -2216,6 +2216,7 @@ dependencies = [
  "base64 0.22.0",
  "clap",
  "color-print",
+ "derive-new",
  "dirs",
  "paastel_rest",
  "prettytable-rs",

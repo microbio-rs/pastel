@@ -16,6 +16,7 @@ anstyle            = "1.0.6"
 base64.workspace   = true
 clap               = { version = "4.5.3", features = ["string", "derive", "env", "wrap_help"] }
 color-print        = "0.3.5"
+derive-new.workspace = true
 dirs               = "5.0.1"
 paastel_rest       = { version = "0.1.0", path = "../paastel_rest" }
 prettytable-rs     = { version = "0.10.0", default-features = false }
