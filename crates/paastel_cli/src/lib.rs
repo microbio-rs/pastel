@@ -18,7 +18,7 @@ pub mod util;
 
 // use util::flag;
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use clap::{Arg, Command};
 use paastel_settings::{Location, Settings};
@@ -72,19 +72,17 @@ pub async fn execute() -> Result<(), error::Error> {
         .arg(
             Arg::new("settings-file")
                 .long("settings-file")
-                .value_parser(clap::value_parser!(PathBuf))
-                .default_value(
-                    cmd::settings::default_location().into_os_string(),
-                )
+                .value_parser(clap::builder::ValueParser::new(
+                    parse_settings_var,
+                ))
+                .default_value(Location::default_path().into_os_string())
                 .env("PAASTEL_SETTINGS")
                 .help("Set path of settings file"),
         );
     // .arg(flag("version", "Print version info and exit").short('V'));
     let matches = command.clone().get_matches();
 
-    if let Some(loc) = matches.get_one::<PathBuf>("settings-file") {
-        let settings_location: Location = loc.into();
-        let settings = Settings::try_from(&settings_location).unwrap();
+    if let Some(settings) = matches.get_one::<Settings>("settings-file") {
         println!("{settings}");
     }
 
@@ -102,6 +100,14 @@ pub async fn execute() -> Result<(), error::Error> {
     // }
 
     Ok(())
+}
+
+fn parse_settings_var(env: &str) -> Result<Settings, String> {
+    let path = Path::new(env).to_path_buf();
+    let settings_location: Location = path.into();
+    let settings =
+        Settings::try_from(&settings_location).map_err(|e| e.to_string())?;
+    Ok(settings)
 }
 
 fn init_tracing() {

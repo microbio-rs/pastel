@@ -37,7 +37,7 @@ impl Location {
         dirs::config_dir().expect("failed to deteminate config dir")
     }
 
-    fn default_path() -> PathBuf {
+    pub fn default_path() -> PathBuf {
         Self::config_dir().join(DEFAULT_SETTINGS_PATH)
     }
 

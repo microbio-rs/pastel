@@ -30,7 +30,7 @@ pub mod location;
 pub use location::*;
 
 /// Represent PaaStel settings
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Settings {
     /// Currently namespace default is `workspace`
     namespace: Namespace,
