@@ -14,22 +14,28 @@
 #![allow(dead_code, unused)]
 use std::{
     env,
+    fmt::{Debug, Display},
     path::{Path, PathBuf},
 };
 
 use config::{Config, ConfigError, Environment, File};
 use serde::Deserialize;
+use tracing::info;
 
 /// Default path of settings file
 const DEFAULT_SETTINGS_FILE_PATH: &str = "paastel/settings.toml";
 
+/// Default namespace
+const DEFAULT_NAMESPACE: &str = "workspace";
+
 /// Represent PaaStel settings
-#[derive(Debug, Deserialize, Default)]
+#[derive(Debug, Deserialize)]
 pub struct Settings {
     /// Currently namespace
     namespace: String,
 
     /// Origin of data, file which was loaded
+    #[serde(skip_serializing)]
     location: Option<PathBuf>,
 }
 
@@ -39,9 +45,79 @@ impl Settings {
         &self.namespace
     }
 
+    pub fn namespace_mut(&mut self) -> &mut str {
+        self.namespace.as_mut_str()
+    }
+
     /// Return location
     pub fn location(&self) -> Option<&PathBuf> {
         self.location.as_ref()
+    }
+
+    /// Set location
+    pub fn location_mut(&mut self) -> Option<&mut PathBuf> {
+        self.location.as_mut()
+    }
+
+    /// Loads PaaStel settings from the specific location
+    fn from_path<P: AsRef<Path> + Debug>(p: P) -> Result<Self, ConfigError> {
+        info!("Loading from {p:?}");
+
+        let path_ref = p.as_ref();
+
+        let mut s = Config::builder()
+            // Required file path
+            .add_source(
+                File::with_name(
+                    path_ref.to_str().expect("failed convert path to str"),
+                )
+                .required(false),
+            )
+            // Try loading fields from PAASTEL_ env prefix
+            .add_source(Environment::with_prefix("paastel"))
+            .build()?;
+
+        info!("Loaded from {p:?}");
+
+        let mut setting: Settings = s.try_deserialize()?;
+        // location no serialize/deserialize
+        let mut location = setting.location_mut();
+        if location.is_none() {
+            location = Some(&mut path_ref.to_path_buf());
+        }
+
+        Ok(setting)
+    }
+
+    /// Loads PaaStel settings from default file path
+    pub fn from_default_path() -> Result<Self, ConfigError> {
+        Self::try_from(&default_settings_file_path())
+    }
+
+    /// Loads PaaStel settings from memory or default values
+    pub fn from_memory() -> Self {
+        Self::default()
+    }
+
+    /// Show if PaaStel settings from a existing path
+    pub fn exists(&self) -> bool {
+        match self.location() {
+            Some(loc) => loc.exists(),
+            None => false,
+        }
+    }
+
+    pub fn in_memory(&self) -> bool {
+        self.location().is_none()
+    }
+}
+
+impl Default for Settings {
+    fn default() -> Self {
+        Self {
+            namespace: DEFAULT_NAMESPACE.to_owned(),
+            location: Some(default_settings_file_path()),
+        }
     }
 }
 
@@ -53,35 +129,20 @@ impl TryFrom<&Path> for Settings {
     }
 }
 
-impl Settings {
-    fn from_path<P: AsRef<Path>>(p: P) -> Result<Self, ConfigError> {
-        let s = Config::builder()
-            .add_source(File::with_name(p.as_ref().to_str().unwrap()))
-            .add_source(Environment::with_prefix("paastel"))
-            .build()?;
+impl TryFrom<&PathBuf> for Settings {
+    type Error = ConfigError;
 
-        s.try_deserialize()
+    fn try_from(value: &PathBuf) -> Result<Self, Self::Error> {
+        Self::from_path(value.as_path())
     }
+}
 
-    pub fn new() -> Result<Self, ConfigError> {
-        let run_mode =
-            env::var("RUN_MODE").unwrap_or_else(|_| "development".into());
-
-        let s = Config::builder()
-            .add_source(File::with_name(
-                "examples/hierarchical-env/config/default",
-            ))
-            .add_source(
-                File::with_name(&format!(
-                    "examples/hierarchical-env/config/{}",
-                    run_mode
-                ))
-                .required(false),
-            )
-            .add_source(Environment::with_prefix("paastel"))
-            .build()?;
-
-        s.try_deserialize()
+impl Display for Settings {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self.location() {
+            Some(loc) => writeln!(f, "Settings from `{loc:?}`"),
+            None => writeln!(f, "Settings load from `memory`"),
+        }
     }
 }
 
