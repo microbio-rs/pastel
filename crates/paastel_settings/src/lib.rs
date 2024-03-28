@@ -19,20 +19,21 @@ use std::{
 };
 
 use config::{Config, ConfigError, Environment, File};
-use serde::Deserialize;
+use derive_new::new;
+use serde::{Deserialize, Serialize};
 use tracing::info;
 
-/// Default path of settings file
-const DEFAULT_SETTINGS_FILE_PATH: &str = "paastel/settings.toml";
+pub mod namespace;
+pub use namespace::*;
 
-/// Default namespace
-const DEFAULT_NAMESPACE: &str = "workspace";
+pub mod location;
+pub use location::*;
 
 /// Represent PaaStel settings
-#[derive(Debug, Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub struct Settings {
-    /// Currently namespace
-    namespace: String,
+    /// Currently namespace default is `workspace`
+    namespace: Namespace,
 
     /// Origin of data, file which was loaded
     #[serde(skip_serializing)]
@@ -40,13 +41,16 @@ pub struct Settings {
 }
 
 impl Settings {
+    /// Default path of settings file
+    const DEFAULT_SETTINGS_FILE_PATH: &'static str = "paastel/settings.toml";
+
     /// Return namespace
-    pub fn namespace(&self) -> &str {
+    pub fn namespace(&self) -> &Namespace {
         &self.namespace
     }
 
-    pub fn namespace_mut(&mut self) -> &mut str {
-        self.namespace.as_mut_str()
+    pub fn namespace_mut(&mut self) -> &mut Namespace {
+        &mut self.namespace
     }
 
     /// Return location
@@ -89,10 +93,10 @@ impl Settings {
         Ok(setting)
     }
 
-    /// Loads PaaStel settings from default file path
-    pub fn from_default_path() -> Result<Self, ConfigError> {
-        Self::try_from(&default_settings_file_path())
-    }
+    // /// Loads PaaStel settings from default file path
+    // pub fn from_default_path() -> Result<Self, ConfigError> {
+    //     Self::try_from(&default_settings_file_path())
+    // }
 
     /// Loads PaaStel settings from memory or default values
     pub fn from_memory() -> Self {
@@ -115,8 +119,8 @@ impl Settings {
 impl Default for Settings {
     fn default() -> Self {
         Self {
-            namespace: DEFAULT_NAMESPACE.to_owned(),
-            location: Some(default_settings_file_path()),
+            namespace: Namespace::default(),
+            location: None, // Some(default_settings_file_path()),
         }
     }
 }
@@ -146,8 +150,8 @@ impl Display for Settings {
     }
 }
 
-fn default_settings_file_path() -> PathBuf {
-    dirs::config_dir()
-        .expect("failed to deteminate config dir")
-        .join(DEFAULT_SETTINGS_FILE_PATH)
-}
+// fn default_settings_file_path() -> PathBuf {
+//     dirs::config_dir()
+//         .expect("failed to deteminate config dir")
+//         .join(DEFAULT_SETTINGS_FILE_PATH)
+// }
