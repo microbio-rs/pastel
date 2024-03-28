@@ -11,15 +11,12 @@
 // WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-#![allow(dead_code, unused)]
 use std::{
-    env,
     fmt::{Debug, Display},
-    path::{Path, PathBuf},
+    path::Path,
 };
 
 use config::{Config, ConfigError, Environment, File};
-use derive_new::new;
 use serde::{Deserialize, Serialize};
 use tracing::info;
 
@@ -41,9 +38,6 @@ pub struct Settings {
 }
 
 impl Settings {
-    /// Default path of settings file
-    const DEFAULT_SETTINGS_FILE_PATH: &'static str = "paastel/settings.toml";
-
     /// Return namespace
     pub fn namespace(&self) -> &Namespace {
         &self.namespace
@@ -82,7 +76,7 @@ impl Settings {
         let path_ref = p.as_ref();
         let location: Location = path_ref.into();
 
-        let mut s = Config::builder()
+        let s = Config::builder()
             // Required file path
             .add_source(
                 File::with_name(

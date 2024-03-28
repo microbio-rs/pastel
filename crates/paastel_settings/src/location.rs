@@ -13,7 +13,6 @@
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 use std::{
-    ffi::OsString,
     fmt::Display,
     path::{Path, PathBuf},
 };

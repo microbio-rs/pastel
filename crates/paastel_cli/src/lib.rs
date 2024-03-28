@@ -18,7 +18,7 @@ pub mod util;
 
 // use util::flag;
 
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use clap::{Arg, Command};
 use paastel_settings::{Location, Settings};
