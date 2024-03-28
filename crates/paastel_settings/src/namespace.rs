@@ -68,7 +68,7 @@ mod tests {
     #[test]
     fn namespace_default() {
         let namespace = Namespace::default();
-        assert_eq!(namespace.as_ref(), "workspace");
+        assert_eq!(namespace.as_ref(), DEFAULT_NAMESPACE);
     }
 
     #[test]
