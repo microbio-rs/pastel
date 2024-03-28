@@ -2222,6 +2222,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "paastel_auth"
+version = "0.1.0"
+
+[[package]]
 name = "paastel_cli"
 version = "0.1.0"
 dependencies = [
