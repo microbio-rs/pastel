@@ -21,9 +21,10 @@ pub mod util;
 use std::path::PathBuf;
 
 use clap::{Arg, Command};
+use paastel_settings::{Location, Settings};
 
 pub async fn execute() -> Result<(), error::Error> {
-    // init_tracing();
+    init_tracing();
 
     // let usage = color_print::cstr!(
     //     "<cyan,bold>paastel</> <cyan>[OPTIONS] [COMMAND]</>"
@@ -79,7 +80,13 @@ pub async fn execute() -> Result<(), error::Error> {
                 .help("Set path of settings file"),
         );
     // .arg(flag("version", "Print version info and exit").short('V'));
-    let _matches = command.clone().get_matches();
+    let matches = command.clone().get_matches();
+
+    if let Some(loc) = matches.get_one::<PathBuf>("settings-file") {
+        let settings_location: Location = loc.into();
+        let settings = Settings::try_from(&settings_location).unwrap();
+        println!("{settings}");
+    }
 
     // if *matches.get_one::<bool>("version").unwrap() {
     //     println!("{}", cmd::version::get_version_string());
@@ -97,14 +104,14 @@ pub async fn execute() -> Result<(), error::Error> {
     Ok(())
 }
 
-// fn init_tracing() {
-//     use tracing_subscriber::EnvFilter;
+fn init_tracing() {
+    use tracing_subscriber::EnvFilter;
 
-//     tracing_subscriber::fmt()
-//         .with_env_filter(EnvFilter::from_default_env())
-//         .with_target(true)
-//         .init();
-// }
+    tracing_subscriber::fmt()
+        .with_env_filter(EnvFilter::from_default_env())
+        .with_target(true)
+        .init();
+}
 
 // pub fn get_styles() -> Styles {
 //     clap::builder::styling::Styles::styled()

@@ -12,28 +12,99 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-use std::fmt::Display;
+use std::{
+    ffi::OsString,
+    fmt::Display,
+    path::{Path, PathBuf},
+};
+
+use config::{Value, ValueKind};
+use serde::{Deserialize, Serialize};
+
+const DEFAULT_SETTINGS_PATH: &str = "paastel/settings.toml";
 
 /// Define where settings from
-enum SettingsLocation {
-    /// When init settings this initial location
-    Memory,
-
+#[derive(
+    Clone, Debug, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord,
+)]
+pub enum Location {
     /// When save or another irect with settings this is location
-    File(String),
+    File(PathBuf),
 }
 
-impl Default for SettingsLocation {
-    fn default() -> Self {
-        Self::Memory
+impl Location {
+    fn config_dir() -> PathBuf {
+        dirs::config_dir().expect("failed to deteminate config dir")
+    }
+
+    fn default_path() -> PathBuf {
+        Self::config_dir().join(DEFAULT_SETTINGS_PATH)
+    }
+
+    pub fn is_default_path(&self) -> bool {
+        match self {
+            Self::File(loc) => loc == &Self::default_path(),
+        }
+    }
+
+    pub fn exists(&self) -> bool {
+        match self {
+            Self::File(loc) => loc.exists(),
+        }
     }
 }
 
-impl Display for SettingsLocation {
+impl Default for Location {
+    fn default() -> Self {
+        Self::File(Self::default_path())
+    }
+}
+
+impl Display for Location {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Memory => writeln!(f, "memory"),
-            Self::File(loc) => writeln!(f, "{loc}"),
+            Self::File(loc) => write!(f, "{}", loc.as_path().display()),
         }
+    }
+}
+
+impl AsRef<Path> for Location {
+    fn as_ref(&self) -> &Path {
+        match self {
+            Self::File(loc) => loc.as_path(),
+        }
+    }
+}
+
+impl From<Location> for Value {
+    fn from(value: Location) -> Self {
+        Value::new(
+            Some(&"location.file".to_string()),
+            ValueKind::String(value.to_string()),
+        )
+    }
+}
+
+impl From<String> for Location {
+    fn from(value: String) -> Self {
+        Self::File(Path::new(&value).to_path_buf())
+    }
+}
+
+impl From<&Path> for Location {
+    fn from(value: &Path) -> Self {
+        Self::File(value.to_path_buf())
+    }
+}
+
+impl From<PathBuf> for Location {
+    fn from(value: PathBuf) -> Self {
+        Self::File(value)
+    }
+}
+
+impl From<&PathBuf> for Location {
+    fn from(value: &PathBuf) -> Self {
+        Self::File(value.clone())
     }
 }

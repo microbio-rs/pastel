@@ -2232,6 +2232,7 @@ dependencies = [
  "derive-new",
  "dirs",
  "paastel_rest",
+ "paastel_settings",
  "prettytable-rs",
  "requestty",
  "reqwest",

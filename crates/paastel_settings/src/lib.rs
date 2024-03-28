@@ -35,9 +35,9 @@ pub struct Settings {
     /// Currently namespace default is `workspace`
     namespace: Namespace,
 
-    /// Origin of data, file which was loaded
-    #[serde(skip_serializing)]
-    location: Option<PathBuf>,
+    /// Origin of data, now from memory or file
+    // #[serde(skip_serializing)]
+    location: Location,
 }
 
 impl Settings {
@@ -54,104 +54,79 @@ impl Settings {
     }
 
     /// Return location
-    pub fn location(&self) -> Option<&PathBuf> {
-        self.location.as_ref()
+    pub fn location(&self) -> &Location {
+        &self.location
     }
 
     /// Set location
-    pub fn location_mut(&mut self) -> Option<&mut PathBuf> {
-        self.location.as_mut()
+    pub fn location_mut(&mut self) -> &mut Location {
+        &mut self.location
     }
 
+    fn from_location(loc: &Location) -> Result<Self, ConfigError> {
+        match loc.exists() {
+            true => Self::from_path(loc),
+            false => match loc.is_default_path() {
+                true => Ok(Self::default()),
+                false => Ok(Self {
+                    location: loc.clone(),
+                    ..Default::default()
+                }),
+            },
+        }
+    }
     /// Loads PaaStel settings from the specific location
     fn from_path<P: AsRef<Path> + Debug>(p: P) -> Result<Self, ConfigError> {
         info!("Loading from {p:?}");
 
         let path_ref = p.as_ref();
+        let location: Location = path_ref.into();
 
         let mut s = Config::builder()
             // Required file path
             .add_source(
                 File::with_name(
-                    path_ref.to_str().expect("failed convert path to str"),
+                    path_ref
+                        .to_str()
+                        .expect("failed convert path of settings to str"),
                 )
-                .required(false),
+                .required(true),
             )
             // Try loading fields from PAASTEL_ env prefix
             .add_source(Environment::with_prefix("paastel"))
+            .set_override("location.file", location)?
             .build()?;
 
         info!("Loaded from {p:?}");
 
-        let mut setting: Settings = s.try_deserialize()?;
-        // location no serialize/deserialize
-        let mut location = setting.location_mut();
-        if location.is_none() {
-            location = Some(&mut path_ref.to_path_buf());
-        }
-
-        Ok(setting)
+        Ok(s.try_deserialize()?)
     }
 
     // /// Loads PaaStel settings from default file path
     // pub fn from_default_path() -> Result<Self, ConfigError> {
     //     Self::try_from(&default_settings_file_path())
     // }
-
-    /// Loads PaaStel settings from memory or default values
-    pub fn from_memory() -> Self {
-        Self::default()
-    }
-
-    /// Show if PaaStel settings from a existing path
-    pub fn exists(&self) -> bool {
-        match self.location() {
-            Some(loc) => loc.exists(),
-            None => false,
-        }
-    }
-
-    pub fn in_memory(&self) -> bool {
-        self.location().is_none()
-    }
 }
 
 impl Default for Settings {
     fn default() -> Self {
         Self {
             namespace: Namespace::default(),
-            location: None, // Some(default_settings_file_path()),
+            location: Location::default(),
         }
     }
 }
 
-impl TryFrom<&Path> for Settings {
+impl TryFrom<&Location> for Settings {
     type Error = ConfigError;
 
-    fn try_from(value: &Path) -> Result<Self, Self::Error> {
-        Self::from_path(value)
-    }
-}
-
-impl TryFrom<&PathBuf> for Settings {
-    type Error = ConfigError;
-
-    fn try_from(value: &PathBuf) -> Result<Self, Self::Error> {
-        Self::from_path(value.as_path())
+    fn try_from(location: &Location) -> Result<Self, Self::Error> {
+        Self::from_location(location)
     }
 }
 
 impl Display for Settings {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self.location() {
-            Some(loc) => writeln!(f, "Settings from `{loc:?}`"),
-            None => writeln!(f, "Settings load from `memory`"),
-        }
+        writeln!(f, "load from `{}` location", self.location())
     }
 }
-
-// fn default_settings_file_path() -> PathBuf {
-//     dirs::config_dir()
-//         .expect("failed to deteminate config dir")
-//         .join(DEFAULT_SETTINGS_FILE_PATH)
-// }
