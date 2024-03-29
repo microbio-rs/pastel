@@ -12,14 +12,20 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-pub mod error;
-pub use error::*;
+use async_trait::async_trait;
 
-pub mod domain;
-pub use domain::*;
+use crate::Credential;
 
-pub mod service;
-pub use service::*;
+///////////////////////////////////////////////////////////////////////////////
+// Ports Incoming
+///////////////////////////////////////////////////////////////////////////////
 
-pub mod port;
-pub use port::*;
+/// # Login use case
+#[async_trait]
+pub trait LoginUseCase {
+    async fn login(&self, credential: Credential) -> crate::Result<()>;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Ports Outgoing
+///////////////////////////////////////////////////////////////////////////////
