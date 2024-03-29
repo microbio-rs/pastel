@@ -2224,6 +2224,13 @@ dependencies = [
 [[package]]
 name = "paastel_auth"
 version = "0.1.0"
+dependencies = [
+ "base64 0.22.0",
+ "derive-new",
+ "serde",
+ "thiserror",
+ "url",
+]
 
 [[package]]
 name = "paastel_cli"
@@ -3762,6 +3769,7 @@ dependencies = [
  "form_urlencoded",
  "idna",
  "percent-encoding",
+ "serde",
 ]
 
 [[package]]

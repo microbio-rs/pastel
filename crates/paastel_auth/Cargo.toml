@@ -12,6 +12,11 @@ repository.workspace   = true
 rust-version.workspace = true
 
 [dependencies]
+base64.workspace     = true
+derive-new.workspace = true
+serde                = { workspace = true, features = ["derive"] }
+thiserror.workspace  = true
+url                  = { version = "2.5.0", features = ["serde"] }
 
 [lints]
 workspace = true

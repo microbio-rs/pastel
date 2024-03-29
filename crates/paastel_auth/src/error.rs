@@ -12,30 +12,7 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-use derive_new::new;
-use serde::{Deserialize, Serialize};
-use url::Url;
+#[derive(Debug, thiserror::Error)]
+pub enum Error {}
 
-pub mod error;
-pub use error::*;
-
-#[derive(new, Serialize, Deserialize)]
-pub struct Username(String);
-
-impl From<String> for Username {
-    fn from(value: String) -> Self {
-        Self(value.clone())
-    }
-}
-
-#[derive(new, Serialize, Deserialize)]
-pub struct Password(String);
-
-impl From<String> for Password {
-    fn from(value: String) -> Self {
-        Self(value.clone())
-    }
-}
-
-#[derive(new, Serialize, Deserialize)]
-pub struct ServerUrl(Url);
+pub type Result<T> = std::result::Result<T, Error>;
