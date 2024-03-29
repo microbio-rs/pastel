@@ -29,7 +29,9 @@ pub struct AuthService {}
 impl LoginUseCase for AuthService {
     async fn login(&self, credential: Credential) -> crate::Result<()> {
         info!("Login to your PaaStel cluster [{}]", credential.url());
-        // process
+        // 1. validate credential
+        // 2. call port kubernetes secrets for get secret credential
+        // 3. verify password
         info!("Login succesfull");
         Ok(())
     }

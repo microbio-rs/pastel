@@ -18,6 +18,7 @@ use derive_new::new;
 use serde::{Deserialize, Serialize};
 use url::Url;
 
+/// Username of user
 #[derive(
     Debug, Serialize, Deserialize, Clone, PartialEq, Eq, PartialOrd, Ord,
 )]
@@ -41,6 +42,7 @@ impl AsRef<str> for Username {
     }
 }
 
+/// Password of user
 #[derive(
     Serialize, Deserialize, Clone, Debug, PartialEq, Eq, PartialOrd, Ord,
 )]
@@ -64,6 +66,7 @@ impl AsRef<str> for Password {
     }
 }
 
+/// Url to connect to a PaaStel server
 #[derive(
     Debug, PartialEq, Eq, PartialOrd, Ord, new, Serialize, Deserialize, Clone,
 )]
