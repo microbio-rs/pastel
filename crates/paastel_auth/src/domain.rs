@@ -19,9 +19,15 @@ use serde::{Deserialize, Serialize};
 use url::Url;
 
 #[derive(
-    Debug, new, Serialize, Deserialize, Clone, PartialEq, Eq, PartialOrd, Ord,
+    Debug, Serialize, Deserialize, Clone, PartialEq, Eq, PartialOrd, Ord,
 )]
 pub struct Username(String);
+
+impl Username {
+    pub fn new<S: Into<String>>(s: S) -> Self {
+        Self(s.into())
+    }
+}
 
 impl From<String> for Username {
     fn from(value: String) -> Self {
@@ -36,9 +42,15 @@ impl AsRef<str> for Username {
 }
 
 #[derive(
-    new, Serialize, Deserialize, Clone, Debug, PartialEq, Eq, PartialOrd, Ord,
+    Serialize, Deserialize, Clone, Debug, PartialEq, Eq, PartialOrd, Ord,
 )]
 pub struct Password(String);
+
+impl Password {
+    pub fn new<S: Into<String>>(s: S) -> Self {
+        Self(s.into())
+    }
+}
 
 impl From<String> for Password {
     fn from(value: String) -> Self {

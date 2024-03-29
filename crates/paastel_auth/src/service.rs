@@ -48,8 +48,8 @@ mod tests {
     async fn auth_service() {
         let mut mock = MockAuthService::new();
         let credential = Credential::new(
-            Username::new("username".to_string()),
-            Password::new("password".to_string()),
+            Username::new("username"),
+            Password::new("password"),
             ServerUrl::new(Url::parse("http://127.0.0.1:3000").unwrap()),
         );
         mock.expect_login()
