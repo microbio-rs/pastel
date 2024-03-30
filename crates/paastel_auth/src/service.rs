@@ -67,34 +67,49 @@ mod tests {
 
     use super::*;
 
-    #[tokio::test]
-    async fn auth_service_ok() {
+    fn new_kube_port(
+        username: &'static str,
+        password_hashed: &'static str,
+    ) -> crate::Result<impl KubeSecretPort> {
         let mut kube_port = MockKubeSecretPort::new();
         kube_port
             .expect_get_secret()
-            .with(eq(Username::new("username")))
+            .with(eq(username.parse::<Username>()?))
             .times(1)
             .returning(move |_| {
-                Ok(UserSecret::new(
-                    Username::new("username"),
-                    Password::new("password_hashed"),
-                ))
+                Ok(UserSecret::new(username.parse()?, password_hashed.parse()?))
             });
+        Ok(kube_port)
+    }
 
+    fn new_password_port(
+        password_text: &'static str,
+        password_hashed: &'static str,
+    ) -> crate::Result<impl PasswordHashPort<Password>> {
         let mut password_port = MockPasswordHashPort::new();
         password_port
             .expect_check_password()
             .with(
-                eq(Password::new("password_text")),
-                eq(Password::new("password_hashed")),
+                eq(password_text.parse::<Password>()?),
+                eq(password_hashed.parse::<Password>()?),
             )
             .times(1)
             .returning(|_, _| Ok(()));
+        Ok(password_port)
+    }
 
-        let credential = Credential::new("username", "password_text");
+    #[tokio::test]
+    async fn auth_service_ok() -> crate::Result<()> {
+        let kube_port = new_kube_port("username", "password_hashed")?;
+        let password_port =
+            new_password_port("password_text", "password_hashed")?;
+
+        let credential = Credential::new("username", "password_text")?;
         let auth_service =
             AuthService::new(Box::new(kube_port), Box::new(password_port));
         let result = auth_service.login(&credential).await;
         assert!(result.is_ok());
+
+        Ok(())
     }
 }

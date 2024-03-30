@@ -13,6 +13,9 @@
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #[derive(Debug, thiserror::Error)]
-pub enum Error {}
+pub enum Error {
+    #[error("domain error {0}")]
+    DomainError(String),
+}
 
 pub type Result<T> = std::result::Result<T, Error>;

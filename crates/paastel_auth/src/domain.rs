@@ -12,32 +12,60 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-use std::fmt::Display;
+use std::{fmt::Display, str::FromStr};
 
 use derive_new::new;
-use serde::{Deserialize, Serialize};
+
+use crate::Error;
+
+/// Minimium username length
+const MIN_USERNAME_LENGTH: usize = 3;
+
+/// Maximum username length
+const MAX_USERNAME_LENGTH: usize = 15;
+
+/// Minimium username length
+const MIN_PASSWORD_LENGTH: usize = 6;
+
+/// Maximum username length
+const MAX_PASSWORD_LENGTH: usize = 20;
 
 /// Username of user
-#[derive(
-    Debug, Serialize, Deserialize, Clone, PartialEq, Eq, PartialOrd, Ord,
-)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Username(String);
 
 impl Username {
-    pub fn new<S: Into<String>>(s: S) -> Self {
+    fn new<S: Into<String>>(s: S) -> Self {
         Self(s.into())
     }
 }
 
-impl From<String> for Username {
-    fn from(value: String) -> Self {
-        Self::new(value.clone())
+impl TryFrom<String> for Username {
+    type Error = Error;
+
+    fn try_from(value: String) -> crate::Result<Self> {
+        value.as_str().parse()
     }
 }
 
-impl From<&str> for Username {
-    fn from(value: &str) -> Self {
-        Self::new(value)
+impl FromStr for Username {
+    type Err = Error;
+
+    fn from_str(value: &str) -> crate::Result<Self> {
+        if value.trim().is_empty() {
+            return Err(Error::DomainError(
+                "`username` not be empty".to_string(),
+            ));
+        }
+
+        if value.trim().len() < MIN_USERNAME_LENGTH
+            || value.trim().len() > MAX_USERNAME_LENGTH
+        {
+            return Err(Error::DomainError(format!(
+                "`username` must be greater than {MIN_USERNAME_LENGTH} and less than {MAX_USERNAME_LENGTH}"
+            )));
+        }
+        Ok(Self::new(value))
     }
 }
 
@@ -54,26 +82,41 @@ impl Display for Username {
 }
 
 /// Password of user
-#[derive(
-    Serialize, Deserialize, Clone, Debug, PartialEq, Eq, PartialOrd, Ord,
-)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Password(String);
 
 impl Password {
-    pub fn new<S: Into<String>>(s: S) -> Self {
+    fn new<S: Into<String>>(s: S) -> Self {
         Self(s.into())
     }
 }
 
-impl From<String> for Password {
-    fn from(value: String) -> Self {
-        Self::new(value.clone())
+impl TryFrom<String> for Password {
+    type Error = Error;
+
+    fn try_from(value: String) -> crate::Result<Self> {
+        value.as_str().parse()
     }
 }
 
-impl From<&str> for Password {
-    fn from(value: &str) -> Self {
-        Self::new(value)
+impl FromStr for Password {
+    type Err = Error;
+
+    fn from_str(value: &str) -> crate::Result<Self> {
+        if value.trim().is_empty() {
+            return Err(Error::DomainError(
+                "`password` not be empty".to_string(),
+            ));
+        }
+
+        if value.trim().len() < MIN_PASSWORD_LENGTH
+            || value.trim().len() > MAX_PASSWORD_LENGTH
+        {
+            return Err(Error::DomainError(format!(
+                "`password` must be greater than {MIN_PASSWORD_LENGTH} and less than {MAX_PASSWORD_LENGTH}"
+            )));
+        }
+        Ok(Self::new(value))
     }
 }
 
@@ -83,9 +126,13 @@ impl AsRef<str> for Password {
     }
 }
 
-#[derive(
-    Debug, Serialize, Deserialize, Clone, PartialEq, Eq, PartialOrd, Ord,
-)]
+impl Display for Password {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Credential {
     /// Username of credential
     username: Username,
@@ -95,14 +142,14 @@ pub struct Credential {
 }
 
 impl Credential {
-    pub fn new<U: Into<Username>, P: Into<Password>>(
+    pub fn new<U: AsRef<str>, P: AsRef<str>>(
         username: U,
         password: P,
-    ) -> Self {
-        Self {
-            username: username.into(),
-            password: password.into(),
-        }
+    ) -> crate::Result<Self> {
+        Ok(Self {
+            username: username.as_ref().parse()?,
+            password: password.as_ref().parse()?,
+        })
     }
 
     /// Return reference username
@@ -116,9 +163,7 @@ impl Credential {
     }
 }
 
-#[derive(
-    Debug, new, Serialize, Deserialize, Clone, PartialEq, Eq, PartialOrd, Ord,
-)]
+#[derive(Debug, new, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct UserSecret {
     username: Username,
     password: Password,
