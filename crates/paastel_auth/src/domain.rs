@@ -178,3 +178,77 @@ impl UserSecret {
         &self.password
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_username_success() {
+        let username = Username::from_str("validUser").unwrap();
+        assert_eq!(username.as_ref(), "validUser");
+    }
+
+    #[test]
+    fn test_username_empty() {
+        let result = Username::from_str("");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_username_too_short() {
+        let result = Username::from_str("ab");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_username_too_long() {
+        let result =
+            Username::from_str("a".repeat(MAX_USERNAME_LENGTH + 1).as_str());
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_password_success() {
+        let password = Password::from_str("validPass123").unwrap();
+        assert_eq!(password.as_ref(), "validPass123");
+    }
+
+    #[test]
+    fn test_password_empty() {
+        let result = Password::from_str("");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_password_too_short() {
+        let result = Password::from_str("12345");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_password_too_long() {
+        let result =
+            Password::from_str("a".repeat(MAX_PASSWORD_LENGTH + 1).as_str());
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_credential_success() {
+        let credential = Credential::new("validUser", "validPass123").unwrap();
+        assert_eq!(credential.username().as_ref(), "validUser");
+        assert_eq!(credential.password().as_ref(), "validPass123");
+    }
+
+    #[test]
+    fn test_credential_invalid_username() {
+        let result = Credential::new("ab", "validPass123");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_credential_invalid_password() {
+        let result = Credential::new("validUser", "12345");
+        assert!(result.is_err());
+    }
+}
