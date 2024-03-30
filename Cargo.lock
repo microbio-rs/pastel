@@ -2226,14 +2226,11 @@ name = "paastel_auth"
 version = "0.1.0"
 dependencies = [
  "async-trait",
- "base64 0.22.0",
  "derive-new",
  "mockall",
- "serde",
  "thiserror",
  "tokio",
  "tracing",
- "url",
 ]
 
 [[package]]
@@ -3773,7 +3770,6 @@ dependencies = [
  "form_urlencoded",
  "idna",
  "percent-encoding",
- "serde",
 ]
 
 [[package]]

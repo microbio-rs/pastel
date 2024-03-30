@@ -12,14 +12,18 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+use std::sync::Arc;
+
 use async_trait::async_trait;
 use derive_new::new;
 use tracing::info;
 
+use crate::Error;
 use crate::KubeSecretPort;
 use crate::Password;
 use crate::PasswordHashPort;
-use crate::{Credential, LoginUseCase};
+use crate::UserSecret;
+use crate::{CheckCredentialUseCase, Credential};
 
 /// # AuthService
 ///
@@ -30,29 +34,35 @@ pub struct AuthService<P> {
     password_port: Box<dyn PasswordHashPort<P> + Send + Sync>,
 }
 
-#[async_trait]
-impl LoginUseCase for AuthService<Password> {
-    async fn login(&self, credential: &Credential) -> crate::Result<()> {
-        info!(
-            "Login to your PaaStel cluster with [{}]",
-            credential.username()
-        );
+pub type ArcLoginUseCase = Arc<dyn CheckCredentialUseCase + Send + Sync>;
 
-        // 1. TODO: validate credential
+#[async_trait]
+impl CheckCredentialUseCase for AuthService<Password> {
+    async fn check_credential(
+        &self,
+        credential: &Credential,
+    ) -> crate::Result<UserSecret> {
         let username = credential.username();
 
-        // 2. call port kubernetes secrets for get secret credential
-        let user_secret = self.kube_port.get_secret(username).await?;
+        info!("Login to your PaaStel cluster with [{}]", username);
 
-        // 3. call port hash password to verify password
-        let cred_password = credential.password(); // password text
-        let user_password = user_secret.password_hashed(); // password hashed
-        self.password_port
-            .check_password(cred_password, user_password)
-            .await?;
+        // 1. call port kubernetes secrets for get secret credential
+        let secrets = self.kube_port.find_secrets_by_username(username).await?;
+        let user_secret_found =
+            secrets.iter().find(|us| us.username() == username);
 
-        info!("Login succesfull");
-        Ok(())
+        match user_secret_found {
+            Some(usf) => {
+                // 2. call port hash password to verify password
+                let p_text = credential.password_text();
+                let p_hash = usf.password_hashed();
+                self.password_port.check_password(p_text, p_hash).await?;
+
+                info!("Login succesfull");
+                Ok(usf.clone())
+            }
+            None => Err(Error::SecretNotFound),
+        }
     }
 }
 
@@ -62,7 +72,7 @@ mod tests {
 
     use crate::{
         MockKubeSecretPort, MockPasswordHashPort, Password, UserSecret,
-        Username,
+        UserSecrets, Username,
     };
 
     use super::*;
@@ -73,11 +83,14 @@ mod tests {
     ) -> crate::Result<impl KubeSecretPort> {
         let mut kube_port = MockKubeSecretPort::new();
         kube_port
-            .expect_get_secret()
+            .expect_find_secrets_by_username()
             .with(eq(username.parse::<Username>()?))
             .times(1)
             .returning(move |_| {
-                Ok(UserSecret::new(username.parse()?, password_hashed.parse()?))
+                Ok(UserSecrets::new(vec![UserSecret::new(
+                    username.parse()?,
+                    password_hashed.parse()?,
+                )]))
             });
         Ok(kube_port)
     }
@@ -107,7 +120,7 @@ mod tests {
         let credential = Credential::new("username", "password_text")?;
         let auth_service =
             AuthService::new(Box::new(kube_port), Box::new(password_port));
-        let result = auth_service.login(&credential).await;
+        let result = auth_service.check_credential(&credential).await;
         assert!(result.is_ok());
 
         Ok(())

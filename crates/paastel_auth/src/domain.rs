@@ -158,7 +158,7 @@ impl Credential {
     }
 
     /// Return reference password
-    pub fn password(&self) -> &Password {
+    pub fn password_text(&self) -> &Password {
         &self.password
     }
 }
@@ -176,6 +176,45 @@ impl UserSecret {
 
     pub fn password_hashed(&self) -> &Password {
         &self.password
+    }
+}
+
+#[derive(new)]
+pub struct UserSecrets(Vec<UserSecret>);
+
+impl UserSecrets {
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
+    pub fn iter(&self) -> UserSecretsIterator {
+        UserSecretsIterator {
+            data: self,
+            index: 0,
+        }
+    }
+}
+
+pub struct UserSecretsIterator<'a> {
+    data: &'a UserSecrets,
+    index: usize,
+}
+
+impl<'a> Iterator for UserSecretsIterator<'a> {
+    type Item = &'a UserSecret;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.index < self.data.len() {
+            let result = &self.data.0[self.index];
+            self.index += 1;
+            Some(result)
+        } else {
+            None
+        }
     }
 }
 
@@ -237,7 +276,7 @@ mod tests {
     fn test_credential_success() {
         let credential = Credential::new("validUser", "validPass123").unwrap();
         assert_eq!(credential.username().as_ref(), "validUser");
-        assert_eq!(credential.password().as_ref(), "validPass123");
+        assert_eq!(credential.password_text().as_ref(), "validPass123");
     }
 
     #[test]

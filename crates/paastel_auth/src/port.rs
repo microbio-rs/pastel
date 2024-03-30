@@ -26,8 +26,11 @@ use crate::{Credential, UserSecret, Username};
 ///
 /// Incoming port
 #[async_trait]
-pub trait LoginUseCase {
-    async fn login(&self, credential: &Credential) -> crate::Result<()>;
+pub trait CheckCredentialUseCase {
+    async fn check_credential(
+        &self,
+        credential: &Credential,
+    ) -> crate::Result<UserSecret>;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -38,10 +41,10 @@ pub trait LoginUseCase {
 #[cfg_attr(test, automock)]
 #[async_trait]
 pub trait KubeSecretPort {
-    async fn get_secret(
+    async fn find_secrets_by_username(
         &self,
         username: &Username,
-    ) -> crate::Result<UserSecret>;
+    ) -> crate::Result<crate::UserSecrets>;
 }
 
 /// Outgoing port to check password

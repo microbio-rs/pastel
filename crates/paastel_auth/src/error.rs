@@ -16,6 +16,10 @@
 pub enum Error {
     #[error("domain error {0}")]
     DomainError(String),
+    #[error("invalid password")]
+    InvalidPassword,
+    #[error("not found secret")]
+    SecretNotFound,
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
