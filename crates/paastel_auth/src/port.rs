@@ -13,8 +13,9 @@
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 use async_trait::async_trait;
+use mockall::automock;
 
-use crate::{Credential, Username};
+use crate::{Credential, Password, UserSecret, Username};
 
 ///////////////////////////////////////////////////////////////////////////////
 // Ports Incoming
@@ -23,13 +24,27 @@ use crate::{Credential, Username};
 /// # Login use case
 #[async_trait]
 pub trait LoginUseCase {
-    async fn login(&self, credential: Credential) -> crate::Result<()>;
+    async fn login(&self, credential: &Credential) -> crate::Result<()>;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // Ports Outgoing
 ///////////////////////////////////////////////////////////////////////////////
+#[automock]
 #[async_trait]
-pub trait KubeSecret {
-    async fn get_secret(&self, username: Username) -> crate::Result<()>;
+pub trait KubeSecretPort {
+    async fn get_secret(
+        &self,
+        username: &Username,
+    ) -> crate::Result<UserSecret>;
+}
+
+#[automock]
+#[async_trait]
+pub trait PasswordHashPort {
+    async fn check_password(
+        &self,
+        password_text: &Password,
+        password_hash: &Password,
+    ) -> crate::Result<()>;
 }

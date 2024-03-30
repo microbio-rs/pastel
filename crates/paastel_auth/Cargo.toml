@@ -19,7 +19,6 @@ mockall.workspace = true
 serde                = { workspace = true, features = ["derive"] }
 thiserror.workspace  = true
 tracing.workspace = true
-url                  = { version = "2.5.0", features = ["serde"] }
 
 [lints]
 workspace = true

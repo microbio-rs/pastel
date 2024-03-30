@@ -16,7 +16,6 @@ use std::fmt::Display;
 
 use derive_new::new;
 use serde::{Deserialize, Serialize};
-use url::Url;
 
 /// Username of user
 #[derive(
@@ -32,13 +31,25 @@ impl Username {
 
 impl From<String> for Username {
     fn from(value: String) -> Self {
-        Self(value.clone())
+        Self::new(value.clone())
+    }
+}
+
+impl From<&str> for Username {
+    fn from(value: &str) -> Self {
+        Self::new(value)
     }
 }
 
 impl AsRef<str> for Username {
     fn as_ref(&self) -> &str {
         self.0.as_str()
+    }
+}
+
+impl Display for Username {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
     }
 }
 
@@ -56,7 +67,13 @@ impl Password {
 
 impl From<String> for Password {
     fn from(value: String) -> Self {
-        Self(value.clone())
+        Self::new(value.clone())
+    }
+}
+
+impl From<&str> for Password {
+    fn from(value: &str) -> Self {
+        Self::new(value)
     }
 }
 
@@ -66,34 +83,24 @@ impl AsRef<str> for Password {
     }
 }
 
-/// Url to connect to a PaaStel server
 #[derive(
-    Debug, PartialEq, Eq, PartialOrd, Ord, new, Serialize, Deserialize, Clone,
-)]
-pub struct ServerUrl(Url);
-
-impl AsRef<str> for ServerUrl {
-    fn as_ref(&self) -> &str {
-        self.0.as_str()
-    }
-}
-
-impl Display for ServerUrl {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
-
-#[derive(
-    Debug, new, Serialize, Deserialize, Clone, PartialEq, Eq, PartialOrd, Ord,
+    Debug, Serialize, Deserialize, Clone, PartialEq, Eq, PartialOrd, Ord,
 )]
 pub struct Credential {
     username: Username,
     password: Password,
-    url: ServerUrl,
 }
 
 impl Credential {
+    pub fn new<U: Into<Username>, P: Into<Password>>(
+        username: U,
+        password: P,
+    ) -> Self {
+        Self {
+            username: username.into(),
+            password: password.into(),
+        }
+    }
     pub fn username(&self) -> &Username {
         &self.username
     }
@@ -101,8 +108,22 @@ impl Credential {
     pub fn password(&self) -> &Password {
         &self.password
     }
+}
 
-    pub fn url(&self) -> &ServerUrl {
-        &self.url
+#[derive(
+    Debug, new, Serialize, Deserialize, Clone, PartialEq, Eq, PartialOrd, Ord,
+)]
+pub struct UserSecret {
+    username: Username,
+    password: Password,
+}
+
+impl UserSecret {
+    pub fn username(&self) -> &Username {
+        &self.username
+    }
+
+    pub fn password_hashed(&self) -> &Password {
+        &self.password
     }
 }

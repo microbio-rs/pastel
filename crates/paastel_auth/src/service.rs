@@ -13,25 +13,43 @@
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 use async_trait::async_trait;
-use mockall::automock;
-use mockall::predicate::*;
+use derive_new::new;
 use tracing::info;
 
+use crate::KubeSecretPort;
+use crate::PasswordHashPort;
 use crate::{Credential, LoginUseCase};
 
 /// # AuthService
 ///
 /// This service implement use cases from authentication
-pub struct AuthService {}
+#[derive(new)]
+pub struct AuthService {
+    kube_port: Box<dyn KubeSecretPort + Send + Sync>,
+    password_port: Box<dyn PasswordHashPort + Send + Sync>,
+}
 
-#[automock]
 #[async_trait]
 impl LoginUseCase for AuthService {
-    async fn login(&self, credential: Credential) -> crate::Result<()> {
-        info!("Login to your PaaStel cluster [{}]", credential.url());
-        // 1. validate credential
+    async fn login(&self, credential: &Credential) -> crate::Result<()> {
+        info!(
+            "Login to your PaaStel cluster with [{}]",
+            credential.username()
+        );
+
+        // 1. TODO: validate credential
+        let username = credential.username();
+
         // 2. call port kubernetes secrets for get secret credential
-        // 3. verify password
+        let user_secret = self.kube_port.get_secret(username).await?;
+
+        // 3. call port hash password to verify password
+        let cred_password = credential.password(); // password text
+        let user_password = user_secret.password_hashed(); // password hashed
+        self.password_port
+            .check_password(cred_password, user_password)
+            .await?;
+
         info!("Login succesfull");
         Ok(())
     }
@@ -39,27 +57,43 @@ impl LoginUseCase for AuthService {
 
 #[cfg(test)]
 mod tests {
-    use mockall::predicate;
-    use url::Url;
+    use mockall::predicate::eq;
 
-    use crate::{Password, ServerUrl, Username};
+    use crate::{
+        MockKubeSecretPort, MockPasswordHashPort, Password, UserSecret,
+        Username,
+    };
 
     use super::*;
 
     #[tokio::test]
-    async fn auth_service() {
-        let mut mock = MockAuthService::new();
-        let credential = Credential::new(
-            Username::new("username"),
-            Password::new("password"),
-            ServerUrl::new(Url::parse("http://127.0.0.1:3000").unwrap()),
-        );
-        mock.expect_login()
-            .with(predicate::eq(credential.clone()))
+    async fn auth_service_ok() {
+        let mut kube_port = MockKubeSecretPort::new();
+        kube_port
+            .expect_get_secret()
+            .with(eq(Username::new("username")))
             .times(1)
-            .returning(|_| Ok(()));
+            .returning(move |_| {
+                Ok(UserSecret::new(
+                    Username::new("username"),
+                    Password::new("password_hashed"),
+                ))
+            });
 
-        let result = mock.login(credential).await;
+        let mut password_port = MockPasswordHashPort::new();
+        password_port
+            .expect_check_password()
+            .with(
+                eq(Password::new("password_text")),
+                eq(Password::new("password_hashed")),
+            )
+            .times(1)
+            .returning(|_, _| Ok(()));
+
+        let credential = Credential::new("username", "password_text");
+        let auth_service =
+            AuthService::new(Box::new(kube_port), Box::new(password_port));
+        let result = auth_service.login(&credential).await;
         assert!(result.is_ok());
     }
 }
