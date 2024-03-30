@@ -87,7 +87,10 @@ impl AsRef<str> for Password {
     Debug, Serialize, Deserialize, Clone, PartialEq, Eq, PartialOrd, Ord,
 )]
 pub struct Credential {
+    /// Username of credential
     username: Username,
+
+    /// Password text format of credential
     password: Password,
 }
 
@@ -101,10 +104,13 @@ impl Credential {
             password: password.into(),
         }
     }
+
+    /// Return reference username
     pub fn username(&self) -> &Username {
         &self.username
     }
 
+    /// Return reference password
     pub fn password(&self) -> &Password {
         &self.password
     }

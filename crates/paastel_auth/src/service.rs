@@ -17,6 +17,7 @@ use derive_new::new;
 use tracing::info;
 
 use crate::KubeSecretPort;
+use crate::Password;
 use crate::PasswordHashPort;
 use crate::{Credential, LoginUseCase};
 
@@ -24,13 +25,13 @@ use crate::{Credential, LoginUseCase};
 ///
 /// This service implement use cases from authentication
 #[derive(new)]
-pub struct AuthService {
+pub struct AuthService<P> {
     kube_port: Box<dyn KubeSecretPort + Send + Sync>,
-    password_port: Box<dyn PasswordHashPort + Send + Sync>,
+    password_port: Box<dyn PasswordHashPort<P> + Send + Sync>,
 }
 
 #[async_trait]
-impl LoginUseCase for AuthService {
+impl LoginUseCase for AuthService<Password> {
     async fn login(&self, credential: &Credential) -> crate::Result<()> {
         info!(
             "Login to your PaaStel cluster with [{}]",
