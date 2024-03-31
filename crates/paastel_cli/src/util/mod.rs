@@ -3,8 +3,8 @@ use std::path::Path;
 use clap::{Arg, ArgAction};
 use paastel_settings::{Location, Settings};
 
-pub mod compress;
-pub mod style;
+// pub mod compress;
+// pub mod style;
 
 pub fn flag(name: &'static str, help: &'static str) -> Arg {
     Arg::new(name)
@@ -18,12 +18,22 @@ pub fn opt(name: &'static str, help: &'static str) -> Arg {
 }
 
 pub(crate) fn init_tracing() {
-    use tracing_subscriber::EnvFilter;
+    use tracing_subscriber::prelude::*;
 
-    tracing_subscriber::fmt()
-        .with_env_filter(EnvFilter::from_default_env())
-        .with_target(true)
-        .init();
+    let env = tracing_subscriber::EnvFilter::from_env("PAASTEL_LOG");
+    let fmt_layer = tracing_subscriber::fmt::layer()
+        .with_timer(tracing_subscriber::fmt::time::Uptime::default())
+        .with_ansi(std::io::IsTerminal::is_terminal(&std::io::stderr()))
+        .with_writer(std::io::stderr)
+        .with_filter(env);
+
+    let registry = tracing_subscriber::registry().with(fmt_layer);
+    registry.init();
+
+    tracing::trace!(
+        start =
+            humantime::format_rfc3339(std::time::SystemTime::now()).to_string()
+    );
 }
 
 pub(crate) fn parse_settings_var(env: &str) -> Result<Settings, String> {

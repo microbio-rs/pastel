@@ -16,24 +16,24 @@ use std::fmt::Display;
 
 #[derive(Debug)]
 pub enum Error {
-    UrlParse(String),
+    // UrlParse(String),
     Settings(String),
     Io(String),
-    Toml(String),
-    Base64(String),
-    Server,
+    // Toml(String),
+    // Base64(String),
+    // Server,
     Unknown,
 }
 
 impl Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Error::UrlParse(e) => write!(f, "parser url {e}"),
+            // Error::UrlParse(e) => write!(f, "parser url {e}"),
             Error::Settings(e) => write!(f, "settings {e}"),
             Error::Io(e) => write!(f, "io {e}"),
-            Error::Toml(e) => write!(f, "toml parser {e}"),
-            Error::Base64(e) => write!(f, "base64 {e}"),
-            Error::Server => write!(f, "server error"),
+            // Error::Toml(e) => write!(f, "toml parser {e}"),
+            // Error::Base64(e) => write!(f, "base64 {e}"),
+            // Error::Server => write!(f, "server error"),
             Error::Unknown => write!(f, "unknown"),
         }
     }
@@ -41,11 +41,11 @@ impl Display for Error {
 
 impl std::error::Error for Error {}
 
-impl From<url::ParseError> for Error {
-    fn from(value: url::ParseError) -> Self {
-        Self::UrlParse(value.to_string())
-    }
-}
+// impl From<url::ParseError> for Error {
+//     fn from(value: url::ParseError) -> Self {
+//         Self::UrlParse(value.to_string())
+//     }
+// }
 
 impl From<std::io::Error> for Error {
     fn from(value: std::io::Error) -> Self {
@@ -53,26 +53,26 @@ impl From<std::io::Error> for Error {
     }
 }
 
-impl From<toml::de::Error> for Error {
-    fn from(value: toml::de::Error) -> Self {
-        Self::Toml(value.to_string())
-    }
-}
+// impl From<toml::de::Error> for Error {
+//     fn from(value: toml::de::Error) -> Self {
+//         Self::Toml(value.to_string())
+//     }
+// }
 
-impl From<toml::ser::Error> for Error {
-    fn from(value: toml::ser::Error) -> Self {
-        Self::Toml(value.to_string())
-    }
-}
+// impl From<toml::ser::Error> for Error {
+//     fn from(value: toml::ser::Error) -> Self {
+//         Self::Toml(value.to_string())
+//     }
+// }
 
-impl From<base64::DecodeError> for Error {
-    fn from(value: base64::DecodeError) -> Self {
-        Self::Base64(value.to_string())
-    }
-}
+// impl From<base64::DecodeError> for Error {
+//     fn from(value: base64::DecodeError) -> Self {
+//         Self::Base64(value.to_string())
+//     }
+// }
 
-impl From<paastel_rest::error::Error> for Error {
-    fn from(_: paastel_rest::error::Error) -> Self {
-        Self::Server
-    }
-}
+// impl From<paastel_rest::error::Error> for Error {
+//     fn from(_: paastel_rest::error::Error) -> Self {
+//         Self::Server
+//     }
+// }
