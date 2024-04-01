@@ -17,6 +17,7 @@ use std::sync::Arc;
 use async_trait::async_trait;
 use derive_new::new;
 use tracing::info;
+use tracing::warn;
 
 use crate::Error;
 use crate::KubeSecretPort;
@@ -47,21 +48,22 @@ impl CheckCredentialUseCase for AuthService<Password> {
         info!("Login to your PaaStel cluster with [{}]", username);
 
         // 1. call port kubernetes secrets for get secret credential
+        // NOTE: User has multiples secrets
         let secrets = self.kube_port.find_secrets_by_username(username).await?;
         let user_secret_found =
             secrets.iter().find(|us| us.username() == username);
 
-        match user_secret_found {
-            Some(usf) => {
-                // 2. call port hash password to verify password
-                let p_text = credential.password_text();
-                let p_hash = usf.password_hashed();
-                self.password_port.check_password(p_text, p_hash).await?;
+        if let Some(usf) = user_secret_found {
+            // 2. call port hash password to verify password
+            let p_text = credential.password_text();
+            let p_hash = usf.password_hashed();
+            self.password_port.check_password(p_text, p_hash).await?;
 
-                info!("Login succesfull");
-                Ok(usf.clone())
-            }
-            None => Err(Error::SecretNotFound),
+            info!("Login succesfull");
+            Ok(usf.clone())
+        } else {
+            warn!("Username [{}] secret not found", username);
+            Err(Error::SecretNotFound)
         }
     }
 }

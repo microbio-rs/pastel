@@ -71,17 +71,16 @@ impl Settings {
     }
     /// Loads PaaStel settings from the specific location
     fn from_path<P: AsRef<Path> + Debug>(p: P) -> Result<Self, ConfigError> {
-        info!("Loading from {p:?}");
+        let path = p.as_ref();
+        let location: Location = path.into();
 
-        let path_ref = p.as_ref();
-        let location: Location = path_ref.into();
+        tracing::debug!(?path, "load config from file");
 
         let s = Config::builder()
             // Required file path
             .add_source(
                 File::with_name(
-                    path_ref
-                        .to_str()
+                    path.to_str()
                         .expect("failed convert path of settings to str"),
                 )
                 .required(true),
