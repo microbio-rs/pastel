@@ -1972,18 +1972,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "paastel_auth"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "derive-new",
- "mockall",
- "thiserror",
- "tokio",
- "tracing",
-]
-
-[[package]]
 name = "paastel_cli"
 version = "0.1.0"
 dependencies = [
@@ -2044,6 +2032,18 @@ dependencies = [
  "tower-http 0.5.2",
  "tracing",
  "uuid",
+]
+
+[[package]]
+name = "paastel_secret"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "derive-new",
+ "mockall",
+ "thiserror",
+ "tokio",
+ "tracing",
 ]
 
 [[package]]

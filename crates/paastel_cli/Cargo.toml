@@ -14,7 +14,7 @@ rust-version.workspace = true
 [dependencies]
 # anstyle              = "1.0.6"
 # base64.workspace     = true
-clap = { version = "4.5.3", features = ["string", "derive", "env", "wrap_help"] }
+clap      = { version = "4.5.3", features = ["string", "derive", "env", "wrap_help"] }
 humantime = "2.1.0"
 # color-print          = "0.3.5"
 # derive-new.workspace = true

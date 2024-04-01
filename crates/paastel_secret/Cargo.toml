@@ -1,5 +1,5 @@
 [package]
-name                   = "paastel_auth"
+name                   = "paastel_secret"
 version                = "0.1.0"
 authors.workspace      = true
 categories.workspace   = true
