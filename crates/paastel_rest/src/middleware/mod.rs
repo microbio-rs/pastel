@@ -46,7 +46,7 @@ pub(crate) async fn auth(
 
     let split = auth_header.split_once(' ');
     match split {
-        Some((name, contents)) if name == "Basic" => {
+        Some(("Basic", contents)) => {
             let decoded = decode(contents).unwrap();
             let command =
                 BaseAuthCommand::new(decoded.0.into(), decoded.1.unwrap());
