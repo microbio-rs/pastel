@@ -27,7 +27,7 @@ pub mod location;
 pub use location::*;
 
 /// Represent PaaStel settings
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Default, Clone, Serialize, Deserialize)]
 pub struct Settings {
     /// Currently namespace default is `workspace`
     namespace: Namespace,
@@ -92,22 +92,13 @@ impl Settings {
 
         info!("Loaded from {p:?}");
 
-        Ok(s.try_deserialize()?)
+        s.try_deserialize()
     }
 
     // /// Loads PaaStel settings from default file path
     // pub fn from_default_path() -> Result<Self, ConfigError> {
     //     Self::try_from(&default_settings_file_path())
     // }
-}
-
-impl Default for Settings {
-    fn default() -> Self {
-        Self {
-            namespace: Namespace::default(),
-            location: Location::default(),
-        }
-    }
 }
 
 impl TryFrom<&Location> for Settings {
