@@ -73,11 +73,10 @@ mod tests {
     use mockall::predicate::eq;
 
     use crate::{
-        MockKubeSecretPort, MockPasswordHashPort, Password, UserSecret,
-        UserSecrets, Username,
+        AuthService, CheckCredentialUseCase, Credential, KubeSecretPort,
+        MockKubeSecretPort, MockPasswordHashPort, Password, PasswordHashPort,
+        UserSecret, UserSecrets, Username,
     };
-
-    use super::*;
 
     fn new_kube_port(
         username: &'static str,
