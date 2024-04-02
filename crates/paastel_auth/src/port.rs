@@ -16,7 +16,7 @@ use async_trait::async_trait;
 #[cfg(test)]
 use mockall::automock;
 
-use crate::{Credential, UserSecret, Username};
+use crate::{Credential, SecretLabel, UserSecret};
 
 ///////////////////////////////////////////////////////////////////////////////
 // Ports Incoming
@@ -26,8 +26,8 @@ use crate::{Credential, UserSecret, Username};
 ///
 /// Incoming port
 #[async_trait]
-pub trait CheckCredentialUseCase {
-    async fn check_credential(
+pub trait ValidateCredentialUseCase {
+    async fn validate_credential(
         &self,
         credential: &Credential,
     ) -> crate::Result<UserSecret>;
@@ -40,10 +40,10 @@ pub trait CheckCredentialUseCase {
 /// Outogoing port to iteract with kubernetes api
 #[cfg_attr(test, automock)]
 #[async_trait]
-pub trait KubeSecretPort {
-    async fn find_secrets_by_username(
+pub trait OutgoingKubernetesSecretPort {
+    async fn find_secrets_by_label(
         &self,
-        username: &Username,
+        label: &SecretLabel,
     ) -> crate::Result<crate::UserSecrets>;
 }
 
