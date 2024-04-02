@@ -81,6 +81,10 @@ impl Display for Username {
     }
 }
 
+pub trait RetrievePassword {
+    fn password(&self) -> &Password;
+}
+
 /// Password of user
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Password(String);
@@ -157,8 +161,13 @@ impl Credential {
         &self.username
     }
 
-    /// Return reference password
-    pub fn password_text(&self) -> &Password {
+    // /// Return reference password
+    // pub fn password(&self) -> &Password {
+    // }
+}
+
+impl RetrievePassword for Credential {
+    fn password(&self) -> &Password {
         &self.password
     }
 }
@@ -174,7 +183,13 @@ impl UserSecret {
         &self.username
     }
 
-    pub fn password_hashed(&self) -> &Password {
+    // pub fn password(&self) -> &Password {
+    //     &self.password
+    // }
+}
+
+impl RetrievePassword for UserSecret {
+    fn password(&self) -> &Password {
         &self.password
     }
 }
@@ -199,6 +214,15 @@ impl UserSecrets {
     }
 }
 
+impl IntoIterator for UserSecrets {
+    type Item = UserSecret;
+    type IntoIter = std::vec::IntoIter<Self::Item>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
+    }
+}
+
 pub struct UserSecretsIterator<'a> {
     data: &'a UserSecrets,
     index: usize,
@@ -215,6 +239,133 @@ impl<'a> Iterator for UserSecretsIterator<'a> {
         } else {
             None
         }
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub struct LabelKey(String);
+
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub struct LabelValue(String);
+
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub struct SecretLabel {
+    key: LabelKey,
+    value: LabelValue,
+}
+
+impl SecretLabel {
+    pub fn new<U: AsRef<str>, P: AsRef<str>>(
+        key: U,
+        value: P,
+    ) -> crate::Result<Self> {
+        Ok(Self {
+            key: key.as_ref().parse()?,
+            value: value.as_ref().parse()?,
+        })
+    }
+
+    pub fn key(&self) -> &LabelKey {
+        &self.key
+    }
+
+    pub fn value(&self) -> &LabelValue {
+        &self.value
+    }
+}
+
+impl Default for SecretLabel {
+    fn default() -> Self {
+        SecretLabel {
+            key: "paastel.io/api-user-credentials".parse().unwrap(),
+            value: "true".parse().unwrap(),
+        }
+    }
+}
+
+impl Display for SecretLabel {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}={}", self.key(), self.value())
+    }
+}
+
+impl LabelValue {
+    fn new<S: Into<String>>(s: S) -> Self {
+        Self(s.into())
+    }
+}
+
+impl TryFrom<String> for LabelValue {
+    type Error = Error;
+
+    fn try_from(value: String) -> crate::Result<Self> {
+        value.as_str().parse()
+    }
+}
+
+impl FromStr for LabelValue {
+    type Err = Error;
+
+    fn from_str(value: &str) -> crate::Result<Self> {
+        if value.trim().is_empty() {
+            return Err(Error::DomainError(
+                "`label key` not be empty".to_string(),
+            ));
+        }
+
+        Ok(Self::new(value))
+    }
+}
+
+impl AsRef<str> for LabelValue {
+    fn as_ref(&self) -> &str {
+        self.0.as_str()
+    }
+}
+
+impl Display for LabelValue {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+impl LabelKey {
+    fn new<S: Into<String>>(s: S) -> Self {
+        Self(s.into())
+    }
+}
+
+impl TryFrom<String> for LabelKey {
+    type Error = Error;
+
+    fn try_from(value: String) -> crate::Result<Self> {
+        value.as_str().parse()
+    }
+}
+
+impl FromStr for LabelKey {
+    type Err = Error;
+
+    fn from_str(value: &str) -> crate::Result<Self> {
+        if value.trim().is_empty() {
+            return Err(Error::DomainError(
+                "`label key` not be empty".to_string(),
+            ));
+        }
+
+        Ok(Self::new(value))
+    }
+}
+
+impl AsRef<str> for LabelKey {
+    fn as_ref(&self) -> &str {
+        self.0.as_str()
+    }
+}
+
+impl Display for LabelKey {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
     }
 }
 
@@ -276,7 +427,7 @@ mod tests {
     fn test_credential_success() {
         let credential = Credential::new("validUser", "validPass123").unwrap();
         assert_eq!(credential.username().as_ref(), "validUser");
-        assert_eq!(credential.password_text().as_ref(), "validPass123");
+        assert_eq!(credential.password().as_ref(), "validPass123");
     }
 
     #[test]

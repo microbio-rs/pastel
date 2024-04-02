@@ -16,7 +16,7 @@ use async_trait::async_trait;
 #[cfg(test)]
 use mockall::automock;
 
-use crate::{Credential, UserSecret, Username};
+use crate::{Credential, RetrievePassword, SecretLabel, UserSecret};
 
 ///////////////////////////////////////////////////////////////////////////////
 // Ports Incoming
@@ -26,8 +26,8 @@ use crate::{Credential, UserSecret, Username};
 ///
 /// Incoming port
 #[async_trait]
-pub trait CheckCredentialUseCase {
-    async fn check_credential(
+pub trait ValidateCredentialUseCase {
+    async fn validate_credential(
         &self,
         credential: &Credential,
     ) -> crate::Result<UserSecret>;
@@ -40,20 +40,29 @@ pub trait CheckCredentialUseCase {
 /// Outogoing port to iteract with kubernetes api
 #[cfg_attr(test, automock)]
 #[async_trait]
-pub trait KubeSecretPort {
-    async fn find_secrets_by_username(
+pub trait OutgoingKubernetesPort {
+    async fn find_secrets_by_label(
         &self,
-        username: &Username,
+        label: &SecretLabel,
     ) -> crate::Result<crate::UserSecrets>;
 }
+
+pub type OutKubernetesPort = Box<dyn OutgoingKubernetesPort + Send + Sync>;
 
 /// Outgoing port to check password
 #[cfg_attr(test, automock)]
 #[async_trait]
-pub trait PasswordHashPort<P: AsRef<str> + Send + Sync> {
-    async fn check_password(
+pub trait OutgoingArgon2HashPort<T, H>
+where
+    T: RetrievePassword + Send + Sync,
+    H: RetrievePassword + Send + Sync,
+{
+    async fn check(
         &self,
-        password_text: &P,
-        password_hash: &P,
+        password_text: &T,
+        password_hash: &H,
     ) -> crate::Result<()>;
 }
+
+pub type OutArgon2Port<T, H> =
+    Box<dyn OutgoingArgon2HashPort<T, H> + Send + Sync>;
