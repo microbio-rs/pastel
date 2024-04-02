@@ -1,6 +1,6 @@
-// Copyright (c) 2024 Murilo Ijanc' <mbsd@m0x.ru>
+// copyright (c) 2024 murilo ijanc' <mbsd@m0x.ru>
 
-// Permission to use, copy, modify, and distribute this software for any
+// permission to use, copy, modify, and distribute this software for any
 // purpose with or without fee is hereby granted, provided that the above
 // copyright notice and this permission notice appear in all copies.
 

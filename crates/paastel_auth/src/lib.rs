@@ -23,3 +23,6 @@ pub use service::*;
 
 pub mod port;
 pub use port::*;
+
+pub mod application;
+pub use application::*;
