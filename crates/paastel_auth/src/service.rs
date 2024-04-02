@@ -18,8 +18,8 @@ use async_trait::async_trait;
 use derive_new::new;
 
 use crate::{
-    Credential, Error, OutgoingKubernetesSecretPort, PasswordHashPort,
-    SecretLabel, UserSecret, ValidateCredentialUseCase,
+    Argon2Port, Credential, Error, OutKubernetesPort, SecretLabel, UserSecret,
+    ValidateCredentialUseCase,
 };
 
 /// # AuthService
@@ -27,9 +27,8 @@ use crate::{
 /// This service implement use cases from authentication
 #[derive(new)]
 pub struct AuthService {
-    kubernetes_port: Box<dyn OutgoingKubernetesSecretPort + Send + Sync>,
-    password_port:
-        Box<dyn PasswordHashPort<Credential, UserSecret> + Send + Sync>,
+    kubernetes_port: OutKubernetesPort,
+    password_port: Argon2Port<Credential, UserSecret>,
 }
 
 pub type ArcValidateCredentialUseCase =
@@ -45,7 +44,7 @@ impl ValidateCredentialUseCase for AuthService {
 
         tracing::info!(?username, "validate credential on PaaStel cluster");
 
-        // find secrets using default label paastel.io/api-user-credentials
+        // find secrets using default label key paastel.io/api-user-credentials
         let label = SecretLabel::default();
         let secrets =
             self.kubernetes_port.find_secrets_by_label(&label).await?;
@@ -75,16 +74,16 @@ mod tests {
     use mockall::predicate::eq;
 
     use crate::{
-        AuthService, Credential, MockOutgoingKubernetesSecretPort,
-        MockPasswordHashPort, OutgoingKubernetesSecretPort, PasswordHashPort,
+        AuthService, Credential, MockOutgoingArgon2HashPort,
+        MockOutgoingKubernetesPort, OutKubernetesPort, OutgoingArgon2HashPort,
         SecretLabel, UserSecret, UserSecrets, ValidateCredentialUseCase,
     };
 
     fn new_kube_port(
         label: SecretLabel,
         password_hashed: &'static str,
-    ) -> crate::Result<impl OutgoingKubernetesSecretPort> {
-        let mut kube_port = MockOutgoingKubernetesSecretPort::new();
+    ) -> crate::Result<OutKubernetesPort> {
+        let mut kube_port = Box::new(MockOutgoingKubernetesPort::new());
         kube_port
             .expect_find_secrets_by_label()
             .with(eq(label))
@@ -101,8 +100,9 @@ mod tests {
     fn new_password_port(
         credential: Credential,
         user_secret: UserSecret,
-    ) -> crate::Result<impl PasswordHashPort<Credential, UserSecret>> {
-        let mut password_port = MockPasswordHashPort::new();
+    ) -> crate::Result<impl OutgoingArgon2HashPort<Credential, UserSecret>>
+    {
+        let mut password_port = MockOutgoingArgon2HashPort::new();
         password_port
             .expect_check()
             .with(eq(credential), eq(user_secret))
@@ -121,8 +121,7 @@ mod tests {
             UserSecret::new("username".parse()?, "password_hashed".parse()?);
         let password_port = new_password_port(credential.clone(), user_secret)?;
 
-        let auth_service =
-            AuthService::new(Box::new(kube_port), Box::new(password_port));
+        let auth_service = AuthService::new(kube_port, Box::new(password_port));
         let result = auth_service.validate_credential(&credential).await;
         assert!(result.is_ok());
 

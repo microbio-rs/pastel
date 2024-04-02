@@ -40,17 +40,19 @@ pub trait ValidateCredentialUseCase {
 /// Outogoing port to iteract with kubernetes api
 #[cfg_attr(test, automock)]
 #[async_trait]
-pub trait OutgoingKubernetesSecretPort {
+pub trait OutgoingKubernetesPort {
     async fn find_secrets_by_label(
         &self,
         label: &SecretLabel,
     ) -> crate::Result<crate::UserSecrets>;
 }
 
+pub type OutKubernetesPort = Box<dyn OutgoingKubernetesPort + Send + Sync>;
+
 /// Outgoing port to check password
 #[cfg_attr(test, automock)]
 #[async_trait]
-pub trait PasswordHashPort<T, H>
+pub trait OutgoingArgon2HashPort<T, H>
 where
     T: RetrievePassword + Send + Sync,
     H: RetrievePassword + Send + Sync,
@@ -61,3 +63,5 @@ where
         password_hash: &H,
     ) -> crate::Result<()>;
 }
+
+pub type Argon2Port<T, H> = Box<dyn OutgoingArgon2HashPort<T, H> + Send + Sync>;
