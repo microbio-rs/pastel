@@ -12,15 +12,28 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+use std::result::Result as StdResult;
+
 use async_trait::async_trait;
 use derive_new::new;
+use k8s_openapi::api::core::v1::Secret;
+use kube::{api::ListParams, core::ObjectList, Api, Error as KError};
 use paastel_auth::{OutgoingKubernetesPort, SecretLabel};
 
-use crate::client::KubernetesClient;
-
-#[derive(new, Clone)]
+/// Reads secrets managed by a rchestrator`].
+#[derive(new)]
 pub struct KubernetsSecretsAdapter {
-    client: KubernetesClient,
+    api: Api<Secret>,
+}
+
+impl KubernetsSecretsAdapter {
+    async fn get_all<P: Into<String>>(
+        &self,
+        labels: P,
+    ) -> StdResult<ObjectList<Secret>, KError> {
+        let lp = ListParams::default().match_any().labels(&labels.into());
+        self.api.list(&lp).await
+    }
 }
 
 #[async_trait]
@@ -29,6 +42,10 @@ impl OutgoingKubernetesPort for KubernetsSecretsAdapter {
         &self,
         _label: &SecretLabel,
     ) -> paastel_auth::Result<paastel_auth::UserSecrets> {
+        // let secrets_list = self
+        //     .get_all(label)
+        //     .await
+        //     .map_err(|e| paastel_auth::Error::SecretNotFound)?;
         todo!()
     }
 }
