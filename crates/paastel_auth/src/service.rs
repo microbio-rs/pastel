@@ -18,8 +18,8 @@ use async_trait::async_trait;
 use derive_new::new;
 
 use crate::{
-    Argon2Port, Credential, Error, OutKubernetesPort, SecretLabel, UserSecret,
-    ValidateCredentialUseCase,
+    Credential, Error, OutArgon2Port, OutKubernetesPort, SecretLabel,
+    UserSecret, ValidateCredentialUseCase,
 };
 
 /// # AuthService
@@ -28,7 +28,7 @@ use crate::{
 #[derive(new)]
 pub struct AuthService {
     kubernetes_port: OutKubernetesPort,
-    password_port: Argon2Port<Credential, UserSecret>,
+    password_port: OutArgon2Port<Credential, UserSecret>,
 }
 
 pub type ArcValidateCredentialUseCase =
@@ -80,6 +80,23 @@ mod tests {
         SecretLabel, UserSecret, UserSecrets, ValidateCredentialUseCase,
     };
 
+    #[tokio::test]
+    async fn auth_service_ok() -> crate::Result<()> {
+        let kube_port =
+            new_kube_port(SecretLabel::default(), "password_hashed")?;
+
+        let credential = Credential::new("username", "password_text")?;
+        let user_secret =
+            UserSecret::new("username".parse()?, "password_hashed".parse()?);
+        let password_port = new_password_port(credential.clone(), user_secret)?;
+
+        let auth_service = AuthService::new(kube_port, Box::new(password_port));
+        let result = auth_service.validate_credential(&credential).await;
+        assert!(result.is_ok());
+
+        Ok(())
+    }
+
     fn new_kube_port(
         label: SecretLabel,
         password_hashed: &'static str,
@@ -110,22 +127,5 @@ mod tests {
             .times(1)
             .returning(|_, _| Ok(()));
         Ok(password_port)
-    }
-
-    #[tokio::test]
-    async fn auth_service_ok() -> crate::Result<()> {
-        let kube_port =
-            new_kube_port(SecretLabel::default(), "password_hashed")?;
-
-        let credential = Credential::new("username", "password_text")?;
-        let user_secret =
-            UserSecret::new("username".parse()?, "password_hashed".parse()?);
-        let password_port = new_password_port(credential.clone(), user_secret)?;
-
-        let auth_service = AuthService::new(kube_port, Box::new(password_port));
-        let result = auth_service.validate_credential(&credential).await;
-        assert!(result.is_ok());
-
-        Ok(())
     }
 }

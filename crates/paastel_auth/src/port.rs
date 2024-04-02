@@ -64,4 +64,5 @@ where
     ) -> crate::Result<()>;
 }
 
-pub type Argon2Port<T, H> = Box<dyn OutgoingArgon2HashPort<T, H> + Send + Sync>;
+pub type OutArgon2Port<T, H> =
+    Box<dyn OutgoingArgon2HashPort<T, H> + Send + Sync>;
