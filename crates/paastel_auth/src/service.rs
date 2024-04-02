@@ -18,8 +18,8 @@ use async_trait::async_trait;
 use derive_new::new;
 
 use crate::{
-    Credential, Error, OutgoingKubernetesSecretPort, Password,
-    PasswordHashPort, SecretLabel, UserSecret, ValidateCredentialUseCase,
+    Credential, Error, OutgoingKubernetesSecretPort, PasswordHashPort,
+    SecretLabel, UserSecret, ValidateCredentialUseCase,
 };
 
 /// # AuthService
@@ -28,7 +28,8 @@ use crate::{
 #[derive(new)]
 pub struct AuthService {
     kubernetes_port: Box<dyn OutgoingKubernetesSecretPort + Send + Sync>,
-    password_port: Box<dyn PasswordHashPort<Password> + Send + Sync>,
+    password_port:
+        Box<dyn PasswordHashPort<Credential, UserSecret> + Send + Sync>,
 }
 
 pub type ArcValidateCredentialUseCase =
@@ -42,7 +43,7 @@ impl ValidateCredentialUseCase for AuthService {
     ) -> crate::Result<UserSecret> {
         let username = credential.username();
 
-        tracing::info!("validate `{username}` credential on PaaStel cluster");
+        tracing::info!(?username, "validate credential on PaaStel cluster");
 
         // find secrets using default label paastel.io/api-user-credentials
         let label = SecretLabel::default();
@@ -54,16 +55,14 @@ impl ValidateCredentialUseCase for AuthService {
 
         match user_secret {
             Some(us) => {
-                self.password_port
-                    .check(credential.password(), us.password())
-                    .await?;
-                // self.password_port.check_password(credential, user_secret).await?;
-
+                tracing::debug!(?username, "checking password");
+                self.password_port.check(credential, us).await?;
                 Ok(us.clone())
             }
             None => {
                 tracing::error!(
-                    "username `{username}` not found on kubernetes secret"
+                    ?username,
+                    "username not found on kubernetes secret"
                 );
                 Err(Error::SecretNotFound)
             }
@@ -77,9 +76,8 @@ mod tests {
 
     use crate::{
         AuthService, Credential, MockOutgoingKubernetesSecretPort,
-        MockPasswordHashPort, OutgoingKubernetesSecretPort, Password,
-        PasswordHashPort, SecretLabel, UserSecret, UserSecrets,
-        ValidateCredentialUseCase,
+        MockPasswordHashPort, OutgoingKubernetesSecretPort, PasswordHashPort,
+        SecretLabel, UserSecret, UserSecrets, ValidateCredentialUseCase,
     };
 
     fn new_kube_port(
@@ -101,16 +99,13 @@ mod tests {
     }
 
     fn new_password_port(
-        password_text: &'static str,
-        password_hashed: &'static str,
-    ) -> crate::Result<impl PasswordHashPort<Password>> {
+        credential: Credential,
+        user_secret: UserSecret,
+    ) -> crate::Result<impl PasswordHashPort<Credential, UserSecret>> {
         let mut password_port = MockPasswordHashPort::new();
         password_port
             .expect_check()
-            .with(
-                eq(password_text.parse::<Password>()?),
-                eq(password_hashed.parse::<Password>()?),
-            )
+            .with(eq(credential), eq(user_secret))
             .times(1)
             .returning(|_, _| Ok(()));
         Ok(password_port)
@@ -120,10 +115,12 @@ mod tests {
     async fn auth_service_ok() -> crate::Result<()> {
         let kube_port =
             new_kube_port(SecretLabel::default(), "password_hashed")?;
-        let password_port =
-            new_password_port("password_text", "password_hashed")?;
 
         let credential = Credential::new("username", "password_text")?;
+        let user_secret =
+            UserSecret::new("username".parse()?, "password_hashed".parse()?);
+        let password_port = new_password_port(credential.clone(), user_secret)?;
+
         let auth_service =
             AuthService::new(Box::new(kube_port), Box::new(password_port));
         let result = auth_service.validate_credential(&credential).await;

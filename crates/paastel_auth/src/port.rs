@@ -16,7 +16,7 @@ use async_trait::async_trait;
 #[cfg(test)]
 use mockall::automock;
 
-use crate::{Credential, SecretLabel, UserSecret};
+use crate::{Credential, RetrievePassword, SecretLabel, UserSecret};
 
 ///////////////////////////////////////////////////////////////////////////////
 // Ports Incoming
@@ -50,10 +50,14 @@ pub trait OutgoingKubernetesSecretPort {
 /// Outgoing port to check password
 #[cfg_attr(test, automock)]
 #[async_trait]
-pub trait PasswordHashPort<P: AsRef<str> + Send + Sync> {
+pub trait PasswordHashPort<T, H>
+where
+    T: RetrievePassword + Send + Sync,
+    H: RetrievePassword + Send + Sync,
+{
     async fn check(
         &self,
-        password_text: &P,
-        password_hash: &P,
+        password_text: &T,
+        password_hash: &H,
     ) -> crate::Result<()>;
 }

@@ -81,6 +81,10 @@ impl Display for Username {
     }
 }
 
+pub trait RetrievePassword {
+    fn password(&self) -> &Password;
+}
+
 /// Password of user
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Password(String);
@@ -157,8 +161,13 @@ impl Credential {
         &self.username
     }
 
-    /// Return reference password
-    pub fn password(&self) -> &Password {
+    // /// Return reference password
+    // pub fn password(&self) -> &Password {
+    // }
+}
+
+impl RetrievePassword for Credential {
+    fn password(&self) -> &Password {
         &self.password
     }
 }
@@ -174,7 +183,13 @@ impl UserSecret {
         &self.username
     }
 
-    pub fn password(&self) -> &Password {
+    // pub fn password(&self) -> &Password {
+    //     &self.password
+    // }
+}
+
+impl RetrievePassword for UserSecret {
+    fn password(&self) -> &Password {
         &self.password
     }
 }
@@ -220,6 +235,7 @@ impl<'a> Iterator for UserSecretsIterator<'a> {
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct LabelKey(String);
+
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct LabelValue(String);
 
