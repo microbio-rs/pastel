@@ -50,13 +50,14 @@ impl ValidateCredentialUseCase for AuthService {
             self.kubernetes_port.find_secrets_by_label(&label).await?;
 
         // filter secrets by credential username
-        let user_secret = secrets.iter().find(|us| us.username() == username);
+        let user_secret =
+            secrets.into_iter().find(|us| us.username() == username);
 
         match user_secret {
             Some(us) => {
                 tracing::debug!(?username, "checking password");
-                self.password_port.check(credential, us).await?;
-                Ok(us.clone())
+                self.password_port.check(credential, &us).await?;
+                Ok(us)
             }
             None => {
                 tracing::error!(

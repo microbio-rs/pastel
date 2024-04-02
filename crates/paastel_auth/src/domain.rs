@@ -214,6 +214,15 @@ impl UserSecrets {
     }
 }
 
+impl IntoIterator for UserSecrets {
+    type Item = UserSecret;
+    type IntoIter = std::vec::IntoIter<Self::Item>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
+    }
+}
+
 pub struct UserSecretsIterator<'a> {
     data: &'a UserSecrets,
     index: usize,
