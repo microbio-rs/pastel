@@ -42,10 +42,7 @@ impl ValidateCredentialUseCase for AuthService {
     ) -> crate::Result<UserSecret> {
         let username = credential.username();
 
-        tracing::info!(
-            "Validate credential on PaaStel cluster with [{}]",
-            username
-        );
+        tracing::info!("validate `{username}` credential on PaaStel cluster");
 
         // find secrets using default label paastel.io/api-user-credentials
         let label = SecretLabel::default();
@@ -56,16 +53,19 @@ impl ValidateCredentialUseCase for AuthService {
         let user_secret = secrets.iter().find(|us| us.username() == username);
 
         match user_secret {
-            Some(usf) => {
+            Some(us) => {
                 // 2. call port hash password to verify password
                 let p_text = credential.password_text();
-                let p_hash = usf.password_hashed();
+                let p_hash = us.password_hashed();
                 self.password_port.check_password(p_text, p_hash).await?;
+                // self.password_port.check_password(credential, user_secret).await?;
 
-                Ok(usf.clone())
+                Ok(us.clone())
             }
             None => {
-                tracing::warn!("Username [{}] secret not found", username);
+                tracing::error!(
+                    "username `{username}` not found on kubernetes secret"
+                );
                 Err(Error::SecretNotFound)
             }
         }
