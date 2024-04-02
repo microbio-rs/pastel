@@ -51,7 +51,7 @@ pub trait OutgoingKubernetesSecretPort {
 #[cfg_attr(test, automock)]
 #[async_trait]
 pub trait PasswordHashPort<P: AsRef<str> + Send + Sync> {
-    async fn check_password(
+    async fn check(
         &self,
         password_text: &P,
         password_hash: &P,

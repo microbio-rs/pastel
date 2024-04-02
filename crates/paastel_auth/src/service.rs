@@ -54,10 +54,9 @@ impl ValidateCredentialUseCase for AuthService {
 
         match user_secret {
             Some(us) => {
-                // 2. call port hash password to verify password
-                let p_text = credential.password_text();
-                let p_hash = us.password_hashed();
-                self.password_port.check_password(p_text, p_hash).await?;
+                self.password_port
+                    .check(credential.password(), us.password())
+                    .await?;
                 // self.password_port.check_password(credential, user_secret).await?;
 
                 Ok(us.clone())
@@ -107,7 +106,7 @@ mod tests {
     ) -> crate::Result<impl PasswordHashPort<Password>> {
         let mut password_port = MockPasswordHashPort::new();
         password_port
-            .expect_check_password()
+            .expect_check()
             .with(
                 eq(password_text.parse::<Password>()?),
                 eq(password_hashed.parse::<Password>()?),

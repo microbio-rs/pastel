@@ -158,7 +158,7 @@ impl Credential {
     }
 
     /// Return reference password
-    pub fn password_text(&self) -> &Password {
+    pub fn password(&self) -> &Password {
         &self.password
     }
 }
@@ -174,7 +174,7 @@ impl UserSecret {
         &self.username
     }
 
-    pub fn password_hashed(&self) -> &Password {
+    pub fn password(&self) -> &Password {
         &self.password
     }
 }
@@ -402,7 +402,7 @@ mod tests {
     fn test_credential_success() {
         let credential = Credential::new("validUser", "validPass123").unwrap();
         assert_eq!(credential.username().as_ref(), "validUser");
-        assert_eq!(credential.password_text().as_ref(), "validPass123");
+        assert_eq!(credential.password().as_ref(), "validPass123");
     }
 
     #[test]
