@@ -15,23 +15,22 @@
 use std::collections::BTreeMap;
 
 use derive_new::new;
-use k8s_openapi::{api::core::v1::Secret, ByteString, Metadata};
+use k8s_openapi::{api::core::v1::Secret, ByteString};
 use kube::{api::ListParams, core::ObjectList};
 
 use paastel_auth::{SecretLabel, UserSecret, UserSecrets};
 
+/// Secret field username
 const SECRET_FIELD_USERNAME: &str = "username";
+
+/// Secret field password
 const SECRET_FIELD_PASSWORD: &str = "password";
 
 #[derive(Default, Clone, new)]
 pub struct KubernetesMapper {}
 
 impl KubernetesMapper {
-    pub fn from_label_to_lp(&self, _label: &SecretLabel) -> ListParams {
-        todo!()
-    }
-
-    pub fn from_list_secrets_to_domain(
+    pub fn list_secrets_to_domain(
         &self,
         secrets_list: &ObjectList<Secret>,
     ) -> UserSecrets {
@@ -41,6 +40,10 @@ impl KubernetesMapper {
             .filter_map(check_secret_content)
             .collect();
         UserSecrets::new(content)
+    }
+
+    pub fn from_label_to_lp(&self, _label: &SecretLabel) -> ListParams {
+        todo!()
     }
 }
 

@@ -79,8 +79,7 @@ impl OutgoingKubernetesPort for KubernetesAdapter {
             .get_all(&lp)
             .await
             .map_err(|_| paastel_auth::Error::SecretNotFound)?;
-        let user_secrets =
-            self.mapper.from_list_secrets_to_domain(&secrets_list);
+        let user_secrets = self.mapper.list_secrets_to_domain(&secrets_list);
         Ok(user_secrets)
     }
 }
