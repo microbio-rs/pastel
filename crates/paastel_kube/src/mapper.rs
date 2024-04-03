@@ -15,10 +15,13 @@
 use std::collections::BTreeMap;
 
 use derive_new::new;
-use k8s_openapi::{api::core::v1::Secret, ByteString};
+use k8s_openapi::{api::core::v1::Secret, ByteString, Metadata};
 use kube::{api::ListParams, core::ObjectList};
 
 use paastel_auth::{SecretLabel, UserSecret, UserSecrets};
+
+const SECRET_FIELD_USERNAME: &str = "username";
+const SECRET_FIELD_PASSWORD: &str = "password";
 
 #[derive(Default, Clone, new)]
 pub struct KubernetesMapper {}
@@ -34,32 +37,32 @@ impl KubernetesMapper {
     ) -> UserSecrets {
         let content: Vec<UserSecret> = secrets_list
             .iter()
-            .filter_map(check_secret) // |secret| { ) // })
-            .filter_map(|(_metadata, data)| {
-                if data.get("username").is_none()
-                    || data.get("password").is_none()
-                {
-                    tracing::info!(
-                        "not found username or password on secret ..."
-                    );
-                    None
-                } else {
-                    tracing::debug!(
-                        "found username and password on secret ..."
-                    );
-                    Some(UserSecret::new(
-                        "dkjksjkj".parse().unwrap(),
-                        "dkjksjkj".parse().unwrap(), // data.get("username").unwrap(),
-                                                     // data.get("password").unwrap(),
-                    ))
-                }
-            })
+            .filter_map(check_secret_data)
+            .filter_map(check_secret_content)
             .collect();
         UserSecrets::new(content)
     }
 }
 
-fn check_secret(
+fn check_secret_content(
+    (_metadata, data): (&String, &BTreeMap<String, ByteString>),
+) -> Option<UserSecret> {
+    if data.get(SECRET_FIELD_USERNAME).is_none()
+        || data.get(SECRET_FIELD_PASSWORD).is_none()
+    {
+        tracing::info!("not found username or password on secret ...");
+        None
+    } else {
+        tracing::debug!("found username and password on secret ...");
+        Some(UserSecret::new(
+            "dkjksjkj".parse().unwrap(),
+            "dkjksjkj".parse().unwrap(), // data.get("username").unwrap(),
+                                         // data.get("password").unwrap(),
+        ))
+    }
+}
+
+fn check_secret_data(
     secret: &Secret,
 ) -> Option<(&String, &BTreeMap<String, ByteString>)> {
     if secret.data.is_some() && secret.metadata.name.is_some() {
