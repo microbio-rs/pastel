@@ -12,8 +12,10 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+use std::collections::BTreeMap;
+
 use derive_new::new;
-use k8s_openapi::api::core::v1::Secret;
+use k8s_openapi::{api::core::v1::Secret, ByteString};
 use kube::{api::ListParams, core::ObjectList};
 
 use paastel_auth::{SecretLabel, UserSecret, UserSecrets};
@@ -32,14 +34,7 @@ impl KubernetesMapper {
     ) -> UserSecrets {
         let content: Vec<UserSecret> = secrets_list
             .iter()
-            .filter_map(|secret| {
-                if secret.data.is_some() {
-                    Some((&secret.metadata, secret.data.as_ref().unwrap()))
-                } else {
-                    tracing::info!("not found data on secret ...");
-                    None
-                }
-            })
+            .filter_map(check_secret) // |secret| { ) // })
             .filter_map(|(_metadata, data)| {
                 if data.get("username").is_none()
                     || data.get("password").is_none()
@@ -61,5 +56,19 @@ impl KubernetesMapper {
             })
             .collect();
         UserSecrets::new(content)
+    }
+}
+
+fn check_secret(
+    secret: &Secret,
+) -> Option<(&String, &BTreeMap<String, ByteString>)> {
+    if secret.data.is_some() && secret.metadata.name.is_some() {
+        Some((
+            secret.metadata.name.as_ref().unwrap(),
+            secret.data.as_ref().unwrap(),
+        ))
+    } else {
+        tracing::info!("not found data on secret ...");
+        None
     }
 }
