@@ -14,13 +14,16 @@
 
 mod common;
 
-use paastel::AuthKubeSecretPort;
-use paastel_kube::KubernetesAdapter;
+use paastel_auth::{OutgoingKubernetesPort, SecretLabel};
+use paastel_kube::{client::KubernetesClient, KubernetesAdapter};
 
 #[tokio::test]
 async fn list_secrets() {
-    let client = common::kube_client().await;
-    let kube_adapter = KubernetesAdapter::new(client);
-    let secrets = kube_adapter.list().await.unwrap();
+    let label = SecretLabel::default();
+    let client = KubernetesClient::new().await.unwrap();
+    let kube_adapter = KubernetesAdapter::new(&client);
+
+    let secrets = kube_adapter.find_secrets_by_label(&label).await.unwrap();
+
     assert!(!secrets.is_empty());
 }
