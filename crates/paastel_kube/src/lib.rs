@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 // Copyright (c) 2024 Murilo Ijanc' <mbsd@m0x.ru>
 //
 // Permission to use, copy, modify, and distribute this software for any
@@ -14,7 +15,16 @@
 
 pub mod client;
 pub mod error;
+pub mod mapper;
 pub mod secrets;
+
+use async_trait::async_trait;
+use client::KubernetesClient;
+use kube::api::ListParams;
+use mapper::KubernetesMapper;
+use secrets::KubernetsSecretsAdapter;
+
+use paastel_auth::{OutgoingKubernetesPort, SecretLabel};
 
 // use std::{
 //     collections::{BTreeMap, HashMap},
@@ -41,25 +51,39 @@ pub mod secrets;
 // use serde::{Deserialize, Serialize};
 // use tracing::info;
 
-// #[derive(Debug, Clone)]
-// pub struct KubernetesAdapter {
-//     secrets: KubeSecrets,
-//     crd: KubeCustomResource,
-// }
+#[derive(Clone)]
+pub struct KubernetesAdapter {
+    mapper: KubernetesMapper,
+    secrets: KubernetsSecretsAdapter,
+}
 
-// impl KubernetesAdapter {
-//     pub fn new(client: Client) -> Self {
-//         Self {
-//             secrets: KubeSecrets::new(client.clone()),
-//             crd: KubeCustomResource::new(client),
-//         }
-//     }
+impl KubernetesAdapter {
+    pub fn new(client: &KubernetesClient) -> Self {
+        Self {
+            mapper: KubernetesMapper::default(),
+            secrets: KubernetsSecretsAdapter::new(client),
+        }
+    }
+}
 
-//     pub async fn default() -> Self {
-//         let client = Client::try_default().await.unwrap();
-//         Self::new(client)
-//     }
-// }
+#[async_trait]
+impl OutgoingKubernetesPort for KubernetesAdapter {
+    async fn find_secrets_by_label(
+        &self,
+        label: &SecretLabel,
+    ) -> paastel_auth::Result<paastel_auth::UserSecrets> {
+        let label_str = label.to_string();
+        let lp = ListParams::default().match_any().labels(&label_str);
+        let secrets_list = self
+            .secrets
+            .get_all(&lp)
+            .await
+            .map_err(|_| paastel_auth::Error::SecretNotFound)?;
+        let user_secrets =
+            self.mapper.from_list_secrets_to_domain(&secrets_list);
+        Ok(user_secrets)
+    }
+}
 
 // #[derive(Debug, Clone)]
 // pub struct KubeSecrets {
