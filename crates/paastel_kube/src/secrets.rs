@@ -12,18 +12,32 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-mod common;
+use std::result::Result as StdResult;
 
-use paastel_auth::{OutgoingKubernetesPort, SecretLabel};
-use paastel_kube::{client::KubernetesClient, KubernetesAdapter};
+use k8s_openapi::api::core::v1::Secret;
+use kube::{api::ListParams, core::ObjectList, Api, Error as KError};
 
-#[tokio::test]
-async fn list_secrets() {
-    let label = SecretLabel::default();
-    let client = KubernetesClient::new().await.unwrap();
-    let kube_adapter = KubernetesAdapter::new(&client);
+use crate::client::KubernetesClient;
 
-    let secrets = kube_adapter.find_secrets_by_label(&label).await.unwrap();
+/// Reads secrets managed.
+#[derive(Clone)]
+pub(crate) struct KubernetsSecretsAdapter {
+    api: Api<Secret>,
+}
 
-    assert!(!secrets.is_empty());
+impl KubernetsSecretsAdapter {
+    pub fn new(client: &KubernetesClient) -> Self {
+        Self {
+            api: Api::default_namespaced(client.as_ref().clone()),
+        }
+    }
+}
+
+impl KubernetsSecretsAdapter {
+    pub(crate) async fn get_all(
+        &self,
+        list_params: &ListParams,
+    ) -> StdResult<ObjectList<Secret>, KError> {
+        self.api.list(&list_params).await
+    }
 }

@@ -12,18 +12,23 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-mod common;
+use kube::Client;
 
-use paastel_auth::{OutgoingKubernetesPort, SecretLabel};
-use paastel_kube::{client::KubernetesClient, KubernetesAdapter};
+#[derive(Clone)]
+pub struct KubernetesClient {
+    client: Client,
+}
 
-#[tokio::test]
-async fn list_secrets() {
-    let label = SecretLabel::default();
-    let client = KubernetesClient::new().await.unwrap();
-    let kube_adapter = KubernetesAdapter::new(&client);
+impl KubernetesClient {
+    pub async fn new() -> Result<Self, crate::error::Error> {
+        Ok(Self {
+            client: Client::try_default().await?,
+        })
+    }
+}
 
-    let secrets = kube_adapter.find_secrets_by_label(&label).await.unwrap();
-
-    assert!(!secrets.is_empty());
+impl AsRef<Client> for KubernetesClient {
+    fn as_ref(&self) -> &Client {
+        &self.client
+    }
 }

@@ -12,18 +12,8 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-mod common;
-
-use paastel_auth::{OutgoingKubernetesPort, SecretLabel};
-use paastel_kube::{client::KubernetesClient, KubernetesAdapter};
-
-#[tokio::test]
-async fn list_secrets() {
-    let label = SecretLabel::default();
-    let client = KubernetesClient::new().await.unwrap();
-    let kube_adapter = KubernetesAdapter::new(&client);
-
-    let secrets = kube_adapter.find_secrets_by_label(&label).await.unwrap();
-
-    assert!(!secrets.is_empty());
+#[derive(Debug, thiserror::Error)]
+pub enum Error {
+    #[error("kube error")]
+    Kube(#[from] kube::Error),
 }

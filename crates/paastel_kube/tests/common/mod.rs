@@ -1,5 +1,5 @@
-use kube::Client;
+// use kube::Client;
 
-pub async fn kube_client() -> Client {
-    kube::Client::try_default().await.unwrap()
-}
+// pub async fn kube_client() -> Client {
+//     kube::Client::try_default().await.unwrap()
+// }
