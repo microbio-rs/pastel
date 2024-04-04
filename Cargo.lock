@@ -1015,7 +1015,6 @@ dependencies = [
  "async-trait",
  "paastel_auth",
  "rand_core",
- "thiserror",
 ]
 
 [[package]]

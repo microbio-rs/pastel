@@ -12,11 +12,10 @@ repository.workspace   = true
 rust-version.workspace = true
 
 [dependencies]
-argon2              = "0.5.3"
+argon2                = "0.5.3"
 async-trait.workspace = true
-paastel_auth = { version = "0.1.0", path = "../paastel_auth" }
-rand_core           = { version = "0.6.4", features = ["std"] }
-thiserror.workspace = true
+paastel_auth          = { version = "0.1.0", path = "../paastel_auth" }
+rand_core             = { version = "0.6.4", features = ["std"] }
 
 [lints]
 workspace = true

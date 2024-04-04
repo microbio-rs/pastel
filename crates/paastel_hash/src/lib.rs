@@ -23,8 +23,6 @@ use paastel_auth::{
     Credential, OutgoingArgon2HashPort, RetrievePassword, UserSecret,
 };
 
-pub enum Error {}
-
 #[derive(Debug)]
 pub struct Argon2Adapter<'a> {
     #[allow(dead_code)]
