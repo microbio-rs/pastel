@@ -19,3 +19,7 @@ rand_core             = { version = "0.6.4", features = ["std"] }
 
 [lints]
 workspace = true
+
+[dev-dependencies]
+pretty_assertions.workspace = true
+tokio                       = { version = "1.36.0", features = ["macros", "rt-multi-thread"] }

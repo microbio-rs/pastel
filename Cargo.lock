@@ -1014,7 +1014,9 @@ dependencies = [
  "argon2",
  "async-trait",
  "paastel_auth",
+ "pretty_assertions",
  "rand_core",
+ "tokio",
 ]
 
 [[package]]

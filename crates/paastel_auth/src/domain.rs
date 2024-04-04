@@ -172,13 +172,22 @@ impl RetrievePassword for Credential {
     }
 }
 
-#[derive(Debug, new, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct UserSecret {
     username: Username,
     password: Password,
 }
 
 impl UserSecret {
+    pub fn new<U: AsRef<str>, P: AsRef<str>>(
+        username: U,
+        password: P,
+    ) -> crate::Result<Self> {
+        Ok(Self {
+            username: username.as_ref().parse()?,
+            password: password.as_ref().parse()?,
+        })
+    }
     pub fn username(&self) -> &Username {
         &self.username
     }
