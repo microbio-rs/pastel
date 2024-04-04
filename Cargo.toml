@@ -4,7 +4,7 @@ members = [
   # "crates/paastel",
   "crates/paastel_auth",
   # "crates/paastel_cli",
-  # "crates/paastel_hash",
+  "crates/paastel_hash",
   "crates/paastel_kube",
   # "crates/paastel_rest",
   "crates/paastel_settings",
