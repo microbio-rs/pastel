@@ -22,7 +22,7 @@ use crate::{
 #[allow(dead_code)]
 #[derive(Clone)]
 pub struct AuthApplication {
-    validate_credential: ArcValidateCredentialUseCase,
+    pub validate_credential: ArcValidateCredentialUseCase,
 }
 
 impl AuthApplication {

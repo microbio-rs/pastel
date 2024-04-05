@@ -14,7 +14,7 @@ rust-version.workspace = true
 [dependencies]
 axum = { version = "0.7.4", features = ["multipart"] }
 serde.workspace = true
-tokio = { version = "1.36.0", features = ["signal"] }
+tokio = { version = "1.36.0", features = ["macros", "rt-multi-thread", "signal"] }
 tower = { version = "0.4.13", features = ["util"] }
 tower-http = { version = "0.5.2", features = [
   "timeout",
@@ -29,11 +29,16 @@ metrics = { version = "0.22.3", default-features = false }
 metrics-exporter-prometheus = { version = "0.14.0", default-features = false }
 async-trait = "0.1.78"
 uuid = { workspace = true, features = ["v4", "fast-rng", "macro-diagnostics"] }
-paastel = { version = "0.1.0", path = "../paastel" }
+# paastel = { version = "0.1.0", path = "../paastel" }
 derive-new.workspace = true
-paastel_hash = { version = "0.1.0", path = "../paastel_hash" }
-paastel_kube = { version = "0.1.0", path = "../paastel_kube" }
-base64.workspace = true
+paastel_hash         = { version = "0.1.0", path = "../paastel_hash" }
+paastel_kube         = { version = "0.1.0", path = "../paastel_kube" }
+base64.workspace     = true
+paastel_auth         = { version = "0.1.0", path = "../paastel_auth" }
+
+[[bin]]
+name = "paastel-rest"
+path = "src/main.rs"
 
 [lints]
 workspace = true

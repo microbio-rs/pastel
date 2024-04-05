@@ -64,7 +64,7 @@ impl ValidateCredentialUseCase for AuthService {
                     ?username,
                     "username not found on kubernetes secret"
                 );
-                Err(Error::SecretNotFound)
+                Err(Error::InvalidPassword)
             }
         }
     }
@@ -77,7 +77,8 @@ mod tests {
     use crate::{
         AuthService, Credential, MockOutgoingArgon2HashPort,
         MockOutgoingKubernetesPort, OutKubernetesPort, OutgoingArgon2HashPort,
-        SecretLabel, UserSecret, UserSecrets, ValidateCredentialUseCase,
+        PasswordHash, SecretLabel, UserSecret, UserSecrets, Username,
+        ValidateCredentialUseCase,
     };
 
     #[tokio::test]
@@ -86,7 +87,10 @@ mod tests {
             new_kube_port(SecretLabel::default(), "password_hashed")?;
 
         let credential = Credential::new("username", "password_text")?;
-        let user_secret = UserSecret::new("username", "password_hashed")?;
+        let user_secret = UserSecret::new(
+            "username".parse::<Username>()?,
+            "password_hashed".parse::<PasswordHash>()?,
+        );
         let password_port = new_password_port(credential.clone(), user_secret)?;
 
         let auth_service = AuthService::new(kube_port, Box::new(password_port));
@@ -107,9 +111,9 @@ mod tests {
             .times(1)
             .returning(move |_| {
                 Ok(UserSecrets::new(vec![UserSecret::new(
-                    "username",
-                    password_hashed,
-                )?]))
+                    "username".parse::<Username>()?,
+                    password_hashed.parse::<PasswordHash>()?,
+                )]))
             });
         Ok(kube_port)
     }

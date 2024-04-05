@@ -17,7 +17,7 @@ use axum::{
     response::{Html, IntoResponse},
     Extension, Json,
 };
-use paastel::{CreateAppCommand, Name};
+// use paastel::{CreateAppCommand, Name};
 use serde::{Deserialize, Serialize};
 use tracing::info;
 
@@ -28,21 +28,21 @@ pub struct CreateAppRequest {
     name: String,
 }
 
-pub(crate) async fn crete_app(
-    State(AppState {
-        create_app_usecase, ..
-    }): State<AppState>,
-    Extension(current_user): Extension<middleware::CurrentUser>,
-    Path(namespace): Path<String>,
-    Json(CreateAppRequest { name }): Json<CreateAppRequest>,
-) -> impl IntoResponse {
-    info!("requesting creating app");
+// pub(crate) async fn crete_app(
+//     State(AppState {
+//         create_app_usecase, ..
+//     }): State<AppState>,
+//     Extension(current_user): Extension<middleware::CurrentUser>,
+//     Path(namespace): Path<String>,
+//     Json(CreateAppRequest { name }): Json<CreateAppRequest>,
+// ) -> impl IntoResponse {
+//     info!("requesting creating app");
 
-    let command =
-        CreateAppCommand::new(Name::new(name.clone()), namespace.clone());
-    create_app_usecase.create(&command).await.unwrap();
+//     let command =
+//         CreateAppCommand::new(Name::new(name.clone()), namespace.clone());
+//     create_app_usecase.create(&command).await.unwrap();
 
-    Html(format!(
-        "<h1>Hello, {current_user:?} create {name} on {namespace}</h1>"
-    ))
-}
+//     Html(format!(
+//         "<h1>Hello, {current_user:?} create {name} on {namespace}</h1>"
+//     ))
+// }

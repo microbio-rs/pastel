@@ -14,8 +14,9 @@
 
 use std::sync::Arc;
 
-use paastel::{AppService, AuthService};
+use paastel_auth::AuthApplication;
 use paastel_hash::Argon2Adapter;
+use paastel_kube::client::KubernetesClient;
 use paastel_kube::KubernetesAdapter;
 use tokio::net::TcpListener;
 
@@ -25,12 +26,13 @@ use crate::utils;
 
 pub(crate) async fn start_main_server() {
     let hash_port = Argon2Adapter::default();
-    let kube_port = KubernetesAdapter::default().await;
-    let auth_usecase =
-        AuthService::new(Box::new(kube_port.clone()), Box::new(hash_port));
-    let create_app_usecase = AppService::new(Box::new(kube_port));
-    let app_state =
-        AppState::new(Arc::new(create_app_usecase), Arc::new(auth_usecase));
+    let kube_client = KubernetesClient::new().await.unwrap();
+    let kube_port = KubernetesAdapter::new(&kube_client);
+    let credential =
+        AuthApplication::new(Box::new(kube_port), Box::new(hash_port));
+    // AuthService::new(Box::new(kube_port.clone()), Box::new(hash_port));
+    // let create_app_usecase = AppService::new(Box::new(kube_port));
+    let app_state = AppState::new(Arc::new(credential));
     let app = router::make_app(app_state.clone());
 
     let listener = TcpListener::bind("0.0.0.0:3000").await.unwrap();

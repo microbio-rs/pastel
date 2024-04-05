@@ -21,13 +21,13 @@ pub(crate) mod upload;
 
 pub(crate) fn make_route(state: AppState) -> Router<AppState> {
     Router::new()
-        .route(
-            "/namespaces/:namespace/applications",
-            post(create::crete_app),
-        )
-        .route(
-            "/namespaces/:namespace/applications/:app/store",
-            post(upload::upload_app),
-        )
+        // .route(
+        //     "/namespaces/:namespace/applications",
+        //     post(create::crete_app),
+        // )
+        // .route(
+        //     "/namespaces/:namespace/applications/:app/store",
+        //     post(upload::upload_app),
+        // )
         .with_state(state)
 }

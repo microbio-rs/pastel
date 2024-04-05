@@ -21,30 +21,30 @@ use tracing::info;
 
 use crate::{middleware, state::AppState};
 
-pub(crate) async fn upload_app(
-    State(AppState {
-        create_app_usecase: _,
-        ..
-    }): State<AppState>,
-    Extension(current_user): Extension<middleware::CurrentUser>,
-    Path((namespace, app)): Path<(String, String)>,
-    mut multipart: Multipart,
-) -> impl IntoResponse {
-    info!("requesting uploading app");
+// pub(crate) async fn upload_app(
+//     State(AppState {
+//         create_app_usecase: _,
+//         ..
+//     }): State<AppState>,
+//     Extension(current_user): Extension<middleware::CurrentUser>,
+//     Path((namespace, app)): Path<(String, String)>,
+//     mut multipart: Multipart,
+// ) -> impl IntoResponse {
+//     info!("requesting uploading app");
 
-    while let Some(field) = multipart.next_field().await.unwrap() {
-        let name = field.name().unwrap().to_string();
-        let file_name = field.file_name().unwrap().to_string();
-        let content_type = field.content_type().unwrap().to_string();
-        let data = field.bytes().await.unwrap();
+//     while let Some(field) = multipart.next_field().await.unwrap() {
+//         let name = field.name().unwrap().to_string();
+//         let file_name = field.file_name().unwrap().to_string();
+//         let content_type = field.content_type().unwrap().to_string();
+//         let data = field.bytes().await.unwrap();
 
-        println!(
-            "Length of `{name}` (`{file_name}`: `{content_type}`) is {} bytes",
-            data.len()
-        );
-    }
+//         println!(
+//             "Length of `{name}` (`{file_name}`: `{content_type}`) is {} bytes",
+//             data.len()
+//         );
+//     }
 
-    Html(format!(
-        "<h1>Hello, {current_user:?} upload {app} on {namespace}</h1>"
-    ))
-}
+//     Html(format!(
+//         "<h1>Hello, {current_user:?} upload {app} on {namespace}</h1>"
+//     ))
+// }

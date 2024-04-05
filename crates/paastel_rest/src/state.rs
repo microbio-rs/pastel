@@ -15,10 +15,9 @@
 use std::sync::Arc;
 
 use derive_new::new;
-use paastel::{AuthUseCase, CreateAppUseCase};
+use paastel_auth::AuthApplication;
 
 #[derive(new, Clone)]
 pub(crate) struct AppState {
-    pub(crate) create_app_usecase: Arc<dyn CreateAppUseCase + Send + Sync>,
-    pub(crate) auth_usecase: Arc<dyn AuthUseCase + Send + Sync>,
+    pub(crate) credential: Arc<AuthApplication>,
 }
