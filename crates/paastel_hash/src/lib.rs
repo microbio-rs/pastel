@@ -82,6 +82,7 @@ mod tests {
         let argon2_adapter = Argon2Adapter::default();
         // let hash_password = argon2_adapter.hash_password(password).unwrap();
         let result = argon2_adapter.check(&credential, &user_secret).await;
-        assert!(result.is_ok())
+        assert!(result.is_ok());
+        Ok(())
     }
 }
