@@ -73,7 +73,6 @@ impl OutgoingKubernetesPort for KubernetesAdapter {
         label: &SecretLabel,
     ) -> paastel_auth::Result<paastel_auth::UserSecrets> {
         let label_str = label.to_string();
-        println!("{label_str}");
         let lp = ListParams::default().match_any().labels(&label_str);
         let secrets_list = self
             .secrets
