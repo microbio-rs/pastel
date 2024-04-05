@@ -48,17 +48,20 @@ pub(crate) async fn auth(
     let split = auth_header.split_once(' ');
     match split {
         Some(("Basic", contents)) => {
-            let decoded = decode(contents).unwrap();
+            let decoded =
+                decode(contents).map_err(|_| StatusCode::UNAUTHORIZED)?;
             let cred = Credential::new(
                 &decoded.0.parse::<Username>().unwrap(),
                 &decoded.1.as_ref().unwrap().parse::<Password>().unwrap(),
             )
-            .unwrap();
+            .map_err(|_| StatusCode::UNAUTHORIZED)?;
+
             let auth_user = credential
                 .validate_credential
                 .validate_credential(&cred)
                 .await
-                .unwrap();
+                .map_err(|_| StatusCode::UNAUTHORIZED)?;
+
             let current_user = CurrentUser {
                 username: auth_user.username().as_ref().to_string(),
             };
