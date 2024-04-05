@@ -81,8 +81,51 @@ impl Display for Username {
     }
 }
 
-pub trait RetrievePassword {
-    fn password(&self) -> &Password;
+pub trait RetrievePassword<T: AsRef<str>> {
+    fn password(&self) -> &T;
+}
+
+/// PasswordHash of user
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub struct PasswordHash(String);
+
+impl PasswordHash {
+    fn new<S: Into<String>>(s: S) -> Self {
+        Self(s.into())
+    }
+}
+
+impl TryFrom<String> for PasswordHash {
+    type Error = Error;
+
+    fn try_from(value: String) -> crate::Result<Self> {
+        value.as_str().parse()
+    }
+}
+
+impl FromStr for PasswordHash {
+    type Err = Error;
+
+    fn from_str(value: &str) -> crate::Result<Self> {
+        if value.trim().is_empty() {
+            return Err(Error::DomainError(
+                "`password` not be empty".to_string(),
+            ));
+        }
+        Ok(Self::new(value))
+    }
+}
+
+impl AsRef<str> for PasswordHash {
+    fn as_ref(&self) -> &str {
+        self.0.as_str()
+    }
+}
+
+impl Display for PasswordHash {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
 }
 
 /// Password of user
@@ -132,7 +175,7 @@ impl AsRef<str> for Password {
 
 impl Display for Password {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)
+        write!(f, "**********")
     }
 }
 
@@ -166,19 +209,28 @@ impl Credential {
     // }
 }
 
-impl RetrievePassword for Credential {
+impl RetrievePassword<Password> for Credential {
     fn password(&self) -> &Password {
         &self.password
     }
 }
 
-#[derive(Debug, new, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct UserSecret {
     username: Username,
-    password: Password,
+    password: PasswordHash,
 }
 
 impl UserSecret {
+    pub fn new<U: AsRef<str>, P: AsRef<str>>(
+        username: U,
+        password: P,
+    ) -> crate::Result<Self> {
+        Ok(Self {
+            username: username.as_ref().parse()?,
+            password: password.as_ref().parse()?,
+        })
+    }
     pub fn username(&self) -> &Username {
         &self.username
     }
@@ -188,8 +240,8 @@ impl UserSecret {
     // }
 }
 
-impl RetrievePassword for UserSecret {
-    fn password(&self) -> &Password {
+impl RetrievePassword<PasswordHash> for UserSecret {
+    fn password(&self) -> &PasswordHash {
         &self.password
     }
 }

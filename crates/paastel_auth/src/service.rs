@@ -86,8 +86,7 @@ mod tests {
             new_kube_port(SecretLabel::default(), "password_hashed")?;
 
         let credential = Credential::new("username", "password_text")?;
-        let user_secret =
-            UserSecret::new("username".parse()?, "password_hashed".parse()?);
+        let user_secret = UserSecret::new("username", "password_hashed")?;
         let password_port = new_password_port(credential.clone(), user_secret)?;
 
         let auth_service = AuthService::new(kube_port, Box::new(password_port));
@@ -108,9 +107,9 @@ mod tests {
             .times(1)
             .returning(move |_| {
                 Ok(UserSecrets::new(vec![UserSecret::new(
-                    "username".parse()?,
-                    password_hashed.parse()?,
-                )]))
+                    "username",
+                    password_hashed,
+                )?]))
             });
         Ok(kube_port)
     }

@@ -57,11 +57,14 @@ fn check_secret_content(
         None
     } else {
         tracing::debug!("found username and password on secret ...");
-        Some(UserSecret::new(
-            "dkjksjkj".parse().unwrap(),
-            "dkjksjkj".parse().unwrap(), // data.get("username").unwrap(),
-                                         // data.get("password").unwrap(),
-        ))
+        Some(
+            UserSecret::new(
+                "dkjksjkj",
+                "dkjksjkj", // data.get("username").unwrap(),
+                           // data.get("password").unwrap(),
+            )
+            .unwrap(),
+        )
     }
 }
 
