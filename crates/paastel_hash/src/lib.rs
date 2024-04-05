@@ -18,9 +18,10 @@ use argon2::{
     },
     Argon2, PasswordHasher,
 };
-use paastel::AuthHashPasswordPort;
-
-pub enum Error {}
+use async_trait::async_trait;
+use paastel_auth::{
+    Credential, OutgoingArgon2HashPort, RetrievePassword, UserSecret,
+};
 
 #[derive(Debug)]
 pub struct Argon2Adapter<'a> {
@@ -42,16 +43,21 @@ impl<'a> Argon2Adapter<'a> {
     }
 }
 
-impl<'a> AuthHashPasswordPort for Argon2Adapter<'a> {
-    fn verify(
+#[async_trait]
+impl<'a> OutgoingArgon2HashPort<Credential, UserSecret> for Argon2Adapter<'a> {
+    async fn check(
         &self,
-        password: &str,
-        password_hash: &str,
-    ) -> paastel::Result<()> {
-        let parsed_hash = PasswordHash::new(password_hash).unwrap();
+        password_text: &Credential,
+        password_hash: &UserSecret,
+    ) -> paastel_auth::Result<()> {
+        let parsed_hash =
+            PasswordHash::new(password_hash.password().as_ref()).unwrap();
         self.inner
-            .verify_password(password.as_bytes(), &parsed_hash)
-            .unwrap();
+            .verify_password(
+                password_text.password().as_ref().as_bytes(),
+                &parsed_hash,
+            )
+            .map_err(|_| paastel_auth::Error::InvalidPassword)?;
         Ok(())
     }
 }
@@ -64,17 +70,19 @@ impl<'a> Default for Argon2Adapter<'a> {
         }
     }
 }
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    #[test]
-    fn hash_password_ok() {
-        let password = "password";
+    #[tokio::test]
+    async fn hash_password_ok() -> Result<(), paastel_auth::Error> {
+        let credential = Credential::new("username", "password")?;
+        let user_secret = UserSecret::new("username", "$argon2id$v=19$m=19456,t=2,p=1$1SoziBLmGitKRfXC2+e7Ng$hfPRJDDkKyLH3FyHuqxm397sxPkmVkzydPI+LDQp+OU")?;
         let argon2_adapter = Argon2Adapter::default();
-        // $argon2id$v=19$m=19456,t=2,p=1$1SoziBLmGitKRfXC2+e7Ng$hfPRJDDkKyLH3FyHuqxm397sxPkmVkzydPI+LDQp+OU
-        let hash_password = argon2_adapter.hash_password(password).unwrap();
-        let result = argon2_adapter.verify(password, &hash_password);
-        assert!(result.is_ok())
+        // let hash_password = argon2_adapter.hash_password(password).unwrap();
+        let result = argon2_adapter.check(&credential, &user_secret).await;
+        assert!(result.is_ok());
+        Ok(())
     }
 }

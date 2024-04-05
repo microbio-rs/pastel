@@ -16,7 +16,10 @@ use async_trait::async_trait;
 #[cfg(test)]
 use mockall::automock;
 
-use crate::{Credential, RetrievePassword, SecretLabel, UserSecret};
+use crate::{
+    Credential, Password, PasswordHash, RetrievePassword, SecretLabel,
+    UserSecret,
+};
 
 ///////////////////////////////////////////////////////////////////////////////
 // Ports Incoming
@@ -54,8 +57,8 @@ pub type OutKubernetesPort = Box<dyn OutgoingKubernetesPort + Send + Sync>;
 #[async_trait]
 pub trait OutgoingArgon2HashPort<T, H>
 where
-    T: RetrievePassword + Send + Sync,
-    H: RetrievePassword + Send + Sync,
+    T: RetrievePassword<Password> + Send + Sync,
+    H: RetrievePassword<PasswordHash> + Send + Sync,
 {
     async fn check(
         &self,

@@ -12,10 +12,14 @@ repository.workspace   = true
 rust-version.workspace = true
 
 [dependencies]
-argon2              = "0.5.3"
-paastel             = { version = "0.1.0", path = "../paastel" }
-rand_core           = { version = "0.6.4", features = ["std"] }
-thiserror.workspace = true
+argon2                = "0.5.3"
+async-trait.workspace = true
+paastel_auth          = { version = "0.1.0", path = "../paastel_auth" }
+rand_core             = { version = "0.6.4", features = ["std"] }
 
 [lints]
 workspace = true
+
+[dev-dependencies]
+pretty_assertions.workspace = true
+tokio                       = { version = "1.36.0", features = ["macros", "rt-multi-thread"] }
