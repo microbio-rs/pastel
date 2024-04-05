@@ -19,7 +19,8 @@ use axum::{
     response::Response,
 };
 use base64::Engine;
-use paastel::BaseAuthCommand;
+use paastel_auth::{Credential, Password, Username};
+// use paastel::BaseAuthCommand;
 
 use crate::state::AppState;
 
@@ -29,7 +30,7 @@ pub(crate) struct CurrentUser {
 }
 
 pub(crate) async fn auth(
-    State(AppState { auth_usecase, .. }): State<AppState>,
+    State(AppState { credential, .. }): State<AppState>,
     mut req: Request,
     next: Next,
 ) -> Result<Response, StatusCode> {
@@ -48,11 +49,18 @@ pub(crate) async fn auth(
     match split {
         Some(("Basic", contents)) => {
             let decoded = decode(contents).unwrap();
-            let command =
-                BaseAuthCommand::new(decoded.0.into(), decoded.1.unwrap());
-            let auth_user = auth_usecase.basic_auth(&command).await.unwrap();
+            let cred = Credential::new(
+                &decoded.0.parse::<Username>().unwrap(),
+                &decoded.1.as_ref().unwrap().parse::<Password>().unwrap(),
+            )
+            .unwrap();
+            let auth_user = credential
+                .validate_credential
+                .validate_credential(&cred)
+                .await
+                .unwrap();
             let current_user = CurrentUser {
-                username: auth_user.username.0.to_string(),
+                username: auth_user.username().as_ref().to_string(),
             };
             req.extensions_mut().insert(current_user);
             Ok(next.run(req).await)
