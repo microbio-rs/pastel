@@ -22,7 +22,7 @@ use crate::Error;
 const MIN_USERNAME_LENGTH: usize = 3;
 
 /// Maximum username length
-const MAX_USERNAME_LENGTH: usize = 15;
+const MAX_USERNAME_LENGTH: usize = 30;
 
 /// Minimium username length
 const MIN_PASSWORD_LENGTH: usize = 6;
@@ -37,6 +37,32 @@ pub struct Username(String);
 impl Username {
     fn new<S: Into<String>>(s: S) -> Self {
         Self(s.into())
+    }
+}
+
+impl TryFrom<Vec<u8>> for Username {
+    type Error = Error;
+
+    fn try_from(value: Vec<u8>) -> crate::Result<Self> {
+        match std::str::from_utf8(&value) {
+            Ok(v) => v.parse(),
+            Err(_) => Err(Error::DomainError(
+                "failed try username from vec<u8>".to_string(),
+            )),
+        }
+    }
+}
+
+impl TryFrom<&[u8]> for Username {
+    type Error = Error;
+
+    fn try_from(value: &[u8]) -> crate::Result<Self> {
+        match std::str::from_utf8(&value) {
+            Ok(v) => v.parse(),
+            Err(_) => Err(Error::DomainError(
+                "failed try username from vec<u8>".to_string(),
+            )),
+        }
     }
 }
 
@@ -92,6 +118,32 @@ pub struct PasswordHash(String);
 impl PasswordHash {
     fn new<S: Into<String>>(s: S) -> Self {
         Self(s.into())
+    }
+}
+
+impl TryFrom<Vec<u8>> for PasswordHash {
+    type Error = Error;
+
+    fn try_from(value: Vec<u8>) -> crate::Result<Self> {
+        match std::str::from_utf8(&value) {
+            Ok(v) => v.parse(),
+            Err(_) => Err(Error::DomainError(
+                "failed try password hash from vec<u8>".to_string(),
+            )),
+        }
+    }
+}
+
+impl TryFrom<&[u8]> for PasswordHash {
+    type Error = Error;
+
+    fn try_from(value: &[u8]) -> crate::Result<Self> {
+        match std::str::from_utf8(&value) {
+            Ok(v) => v.parse(),
+            Err(_) => Err(Error::DomainError(
+                "failed try password hash from vec<u8>".to_string(),
+            )),
+        }
     }
 }
 
@@ -215,22 +267,22 @@ impl RetrievePassword<Password> for Credential {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(new, Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct UserSecret {
     username: Username,
     password: PasswordHash,
 }
 
 impl UserSecret {
-    pub fn new<U: AsRef<str>, P: AsRef<str>>(
-        username: U,
-        password: P,
-    ) -> crate::Result<Self> {
-        Ok(Self {
-            username: username.as_ref().parse()?,
-            password: password.as_ref().parse()?,
-        })
-    }
+    // pub fn new<U: TryFrom<Username, Error = Error>, P: AsRef<str>>(
+    //     username: U,
+    //     password: P,
+    // ) -> crate::Result<Self> {
+    //     Ok(Self {
+    //         username: Usernameinto(),
+    //         password: password.as_ref().parse()?,
+    //     })
+    // }
     pub fn username(&self) -> &Username {
         &self.username
     }

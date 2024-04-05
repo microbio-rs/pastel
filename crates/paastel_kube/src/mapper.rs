@@ -18,7 +18,9 @@ use derive_new::new;
 use k8s_openapi::{api::core::v1::Secret, ByteString};
 use kube::{api::ListParams, core::ObjectList};
 
-use paastel_auth::{SecretLabel, UserSecret, UserSecrets};
+use paastel_auth::{
+    PasswordHash, SecretLabel, UserSecret, UserSecrets, Username,
+};
 
 /// Secret field username
 const SECRET_FIELD_USERNAME: &str = "username";
@@ -57,14 +59,16 @@ fn check_secret_content(
         None
     } else {
         tracing::debug!("found username and password on secret ...");
-        Some(
-            UserSecret::new(
-                "dkjksjkj",
-                "dkjksjkj", // data.get("username").unwrap(),
-                           // data.get("password").unwrap(),
+        Some(UserSecret::new(
+            Username::try_from(
+                data.get(SECRET_FIELD_USERNAME).unwrap().0.as_slice(),
             )
             .unwrap(),
-        )
+            PasswordHash::try_from(
+                data.get(SECRET_FIELD_PASSWORD).unwrap().0.as_slice(),
+            )
+            .unwrap(),
+        ))
     }
 }
 

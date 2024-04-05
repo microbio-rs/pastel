@@ -64,7 +64,7 @@ impl ValidateCredentialUseCase for AuthService {
                     ?username,
                     "username not found on kubernetes secret"
                 );
-                Err(Error::SecretNotFound)
+                Err(Error::InvalidPassword)
             }
         }
     }
