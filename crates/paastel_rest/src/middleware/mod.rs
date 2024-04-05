@@ -51,8 +51,16 @@ pub(crate) async fn auth(
             let decoded =
                 decode(contents).map_err(|_| StatusCode::UNAUTHORIZED)?;
             let cred = Credential::new(
-                &decoded.0.parse::<Username>().unwrap(),
-                &decoded.1.as_ref().unwrap().parse::<Password>().unwrap(),
+                &decoded
+                    .0
+                    .parse::<Username>()
+                    .map_err(|_| StatusCode::UNAUTHORIZED)?,
+                &decoded
+                    .1
+                    .as_ref()
+                    .unwrap()
+                    .parse::<Password>()
+                    .map_err(|_| StatusCode::UNAUTHORIZED)?,
             )
             .map_err(|_| StatusCode::UNAUTHORIZED)?;
 
