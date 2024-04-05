@@ -73,12 +73,16 @@ impl<'a> Default for Argon2Adapter<'a> {
 
 #[cfg(test)]
 mod tests {
+    use paastel_auth::{PasswordHash, Username};
+
     use super::*;
 
     #[tokio::test]
     async fn hash_password_ok() -> Result<(), paastel_auth::Error> {
         let credential = Credential::new("username", "password")?;
-        let user_secret = UserSecret::new("username", "$argon2id$v=19$m=19456,t=2,p=1$1SoziBLmGitKRfXC2+e7Ng$hfPRJDDkKyLH3FyHuqxm397sxPkmVkzydPI+LDQp+OU")?;
+        let user_secret = UserSecret::new(
+            "username".parse::<Username>()?, 
+            "$argon2id$v=19$m=19456,t=2,p=1$1SoziBLmGitKRfXC2+e7Ng$hfPRJDDkKyLH3FyHuqxm397sxPkmVkzydPI+LDQp+OU".parse::<PasswordHash>()?);
         let argon2_adapter = Argon2Adapter::default();
         // let hash_password = argon2_adapter.hash_password(password).unwrap();
         let result = argon2_adapter.check(&credential, &user_secret).await;
