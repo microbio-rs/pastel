@@ -14,16 +14,24 @@
 
 use axum::{
     response::{Html, IntoResponse},
-    Extension,
+    Extension, Json,
 };
+use serde::{Deserialize, Serialize};
 use tracing::info;
 
 use crate::middleware;
+
+#[derive(Serialize, Deserialize)]
+struct Me {
+    username: String,
+}
 
 pub(crate) async fn get(
     Extension(current_user): Extension<middleware::CurrentUser>,
 ) -> impl IntoResponse {
     info!("requesting me");
-    let username = current_user.username;
-    Html(format!("<h1>Hello, {username}</h1>"))
+    let me = Me {
+        username: current_user.username,
+    };
+    Json(me)
 }
